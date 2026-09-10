@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ambrosia — Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4eee5;color:#30251d}
+button,input,select{font:inherit}button{cursor:pointer}
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#eee2d3,#fbf8f2)}
+.login-box,.panel{background:rgba(255,253,249,.72);border:1px solid rgba(255,255,255,.85);backdrop-filter:blur(20px);box-shadow:0 20px 60px #5b43231c;border-radius:24px}
+.login-box{width:min(420px,92%);padding:36px}.login-box h1{font-family:Georgia,serif;margin:0 0 8px}.login-box p{color:#76695d}
+input,select{width:100%;padding:12px 14px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4;margin:7px 0 12px}
+button{border:0;border-radius:999px;padding:11px 17px}.panel label{display:block;font-size:12px;color:#76695d;margin-top:7px}.panel textarea{font:inherit}.primary{background:linear-gradient(135deg,#a96d2e,#c49351);color:white}.secondary{background:#eee4d7;color:#49392c}.danger{background:#8d3e32;color:white}
+.app{display:none}.top{padding:18px 28px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,252,246,.72);backdrop-filter:blur(18px);border-bottom:1px solid #fff}
+.top h1{font-family:Georgia,serif;margin:0}.wrap{max-width:1200px;margin:auto;padding:28px 18px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab.active{background:#3d3026;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{padding:20px}.full{grid-column:1/-1}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #e4d9ca;font-size:14px}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#ead9bd;color:#6d4b29;font-size:12px}
+.product-row{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #e5dacb}
+.product-row img{width:70px;height:70px;object-fit:cover;border-radius:12px;background:#eee}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.hidden{display:none}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.top{padding:15px}.wrap{padding:18px 12px}}
+.modal-scrim{display:none;position:fixed;inset:0;background:rgba(35,25,17,.45);backdrop-filter:blur(6px);z-index:900;align-items:center;justify-content:center;padding:20px}
+.modal-scrim.open{display:flex}
+.modal-box{background:#fffaf3;border-radius:20px;padding:26px;max-width:480px;width:100%;max-height:82vh;overflow:auto;box-shadow:0 30px 70px rgba(40,25,10,.25)}
+.modal-box h3{font-family:Georgia,serif;margin:0 0 14px;font-size:22px}
+.modal-close-btn{float:right;border:0;background:#eee4d7;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;color:#49392c}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:18px}
+.card{padding:18px;border-radius:18px;background:#fffaf3;border:1px solid #eadfce}
+.card .num{font-size:30px;font-weight:700}
+.order-row{border-top:1px solid #e6dacb;padding:16px 0}.order-row:first-child{border-top:0}
+.orow{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.done-btn{background:#5b7257;color:white}
+@media(max-width:700px){.cards{grid-template-columns:1fr}}
+.invoice-box{max-width:680px}
+.invoice-topbar{height:6px;margin:-26px -26px 22px -26px;background:linear-gradient(135deg,#a96d2e,#c49351);border-radius:20px 20px 0 0}
+@media print{.invoice-topbar{margin:0 0 22px 0;border-radius:0}}
+.invoice-head{display:flex;justify-content:space-between;align-items:center;gap:16px;border-bottom:2px solid #3d3026;padding-bottom:20px;margin-bottom:22px}
+.invoice-head img{max-height:100px;max-width:280px;object-fit:contain}
+.invoice-head h2{font-family:Georgia,serif;margin:0 0 4px;font-size:26px;color:#3d3026}
+.invoice-brand-contact{font-size:12px;color:#8a7968;margin-top:8px;letter-spacing:.2px}
+.invoice-meta{text-align:right;font-size:13px;color:#6b5b4c;line-height:1.7}
+.invoice-meta .inv-title{font-size:26px;font-weight:700;color:#a96d2e;letter-spacing:2px;font-family:Georgia,serif}
+.invoice-cols{display:flex;justify-content:space-between;gap:16px;margin-bottom:24px;font-size:13.5px}
+.invoice-cols>div{flex:1;background:#fbf6ee;border:1px solid #eee0cb;border-radius:14px;padding:14px 18px}
+.invoice-cols h4{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#a96d2e;font-weight:700}
+.invoice-cols div div{margin:2px 0}
+.invoice-table{width:100%;border-collapse:collapse;margin-bottom:18px}
+.invoice-table th{padding:11px 10px;background:#3d3026;color:#f4eee5;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;text-align:left}
+.invoice-table th:first-child{border-radius:10px 0 0 10px}
+.invoice-table th:last-child{border-radius:0 10px 10px 0}
+.invoice-table td{padding:12px 10px;border-bottom:1px solid #e4d9ca;font-size:14px;text-align:left}
+.invoice-table tr:last-child td{border-bottom:none}
+.invoice-table th:last-child,.invoice-table td:last-child{text-align:right}
+.invoice-table th:nth-child(2),.invoice-table td:nth-child(2){text-align:center}
+.invoice-totals{margin-left:auto;width:260px;font-size:14px;background:#fbf6ee;border:1px solid #eee0cb;border-radius:14px;padding:14px 18px}
+.invoice-totals .trow{display:flex;justify-content:space-between;padding:6px 0;color:#6b5b4c}
+.invoice-totals .grand{font-weight:700;font-size:19px;border-top:2px solid #3d3026;margin-top:8px;padding-top:12px;color:#3d3026}
+.invoice-footer{margin-top:28px;padding-top:18px;border-top:1px solid #e6dacb;font-size:13px;color:#8a7968;text-align:center}
+.invoice-footer .thanks{font-family:Georgia,serif;font-size:16px;color:#3d3026;margin-bottom:4px}
+@media print{
+ body *{visibility:hidden}
+ #invoicePrintArea,#invoicePrintArea *{visibility:visible}
+ #invoicePrintArea{position:absolute;left:0;top:0;width:100%;padding:0}
+ .modal-close-btn,.no-print{display:none!important}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<style>.size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.size-grid input{width:100%;margin-top:6px}@media(max-width:700px){.size-grid{grid-template-columns:1fr}}</style><style>textarea{width:100%;min-height:70px;resize:vertical}#prating,#previewcount{width:48%;display:inline-block;margin-right:1%}</style></head>
+<body>
+<div id="login" class="login">
+  <div class="login-box">
+    <img src="data:image/png;base64,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" alt="Ambrosia" style="max-width:220px;margin-bottom:10px"><p>Admin Control Panel</p>
+    <input id="pass" type="password" placeholder="Admin password" onkeydown="if(event.key==='Enter')login(document.querySelector('.login-box .primary'))">
+    <button class="primary" style="width:100%" onclick="login(this)">Sign In</button>
+    <p id="err" style="color:#9a4435"></p>
+  </div>
+</div>
+
+<div id="app" class="app">
+<header class="top"><div style="display:flex;align-items:center;gap:12px"><img src="data:image/png;base64,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" alt="Ambrosia" style="height:40px"><span style="font-family:Georgia,serif;font-size:14px;color:#76695d">Admin</span></div><div class="actions"><a href="https://ambrosiacoffee.store/" target="_blank" rel="noopener"><button class="secondary">Open Store</button></a><button onclick="logout()">Logout</button></div></header>
+<main class="wrap">
+<div class="tabs">
+<button class="tab active" onclick="showTab('products',this)">Products</button>
+<button class="tab" onclick="showTab('collections',this)">Collections</button>
+<button class="tab" onclick="showTab('orders',this)">Orders</button>
+<button class="tab" onclick="showTab('customers',this)">Customers</button>
+<button class="tab" onclick="showTab('content',this)">Store Content</button>
+<button class="tab" onclick="showTab('settings',this)">Settings</button>
+</div>
+
+<section id="products" class="grid">
+<div class="panel">
+<h2>Add / Edit Product</h2>
+<input id="pid" placeholder="Product ID">
+<input id="pname" placeholder="Product name">
+<input id="pprice" type="number" step=".01" placeholder="Price (AED)">
+<input id="pold" type="number" step=".01" placeholder="Old price (optional)">
+<p style="font-size:12px;color:#76695d;margin:-8px 0 4px">These two are only used as a fallback if every pack size below is unchecked. Otherwise the price and old price shown on the store come from the first enabled pack size below — fill those in instead.</p>
+<input id="pimg1" placeholder="Image 1 URL (Main)">
+<input id="pimg2" placeholder="Image 2 URL">
+<input id="pimg3" placeholder="Image 3 URL">
+<input id="pbadge" placeholder="Badge e.g. NEW / SALE / BEST SELLER">
+<select id="pcat"><option value="">Loading categories…</option></select>
+<p style="font-size:11px;color:#76695d;margin-top:-8px">Categories come from your <b>Collections</b> tab. Add a collection there first if you don't see it here.</p>
+<div style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
+<h3 style="margin-top:0">Pack Sizes & Prices</h3>
+<p style="font-size:12px;color:#76695d">Set each pack size and its price. Disable any size you don't sell.</p>
+<div class="size-grid">
+<div><label><input type="checkbox" id="size200_enabled" checked> 200g</label><input id="size200_price" type="number" step=".01" placeholder="Price AED"><input id="size200_old" type="number" step=".01" placeholder="Old Price"></div>
+<div><label><input type="checkbox" id="size250_enabled" checked> 250g</label><input id="size250_price" type="number" step=".01" placeholder="Price AED"><input id="size250_old" type="number" step=".01" placeholder="Old Price"></div>
+<div><label><input type="checkbox" id="size1kg_enabled" checked> 1 Kg</label><input id="size1kg_price" type="number" step=".01" placeholder="Price AED"><input id="size1kg_old" type="number" step=".01" placeholder="Old Price"></div>
+</div></div><div style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
+<h3 style="margin-top:0">Product Detail Page Content</h3>
+<input id="prating" type="number" step=".1" min="0" max="5" placeholder="Rating e.g. 4.7">
+<input id="previewcount" type="number" min="0" placeholder="Review Count e.g. 154">
+<input id="ptasting" placeholder="Short flavour line e.g. Chocolate · Hazelnut · Caramel">
+<textarea id="pdescription" placeholder="Description"></textarea>
+<textarea id="ptastingnotes" placeholder="Tasting Notes"></textarea>
+<textarea id="pbrewing" placeholder="Brewing Guide"></textarea>
+<input id="porigin" placeholder="Origin e.g. Minas Gerais, Brazil">
+</div>
+<button class="primary" onclick="saveProduct()">Save Product</button>
+<button class="secondary" onclick="clearForm()">Clear</button>
+<p id="productSaved" style="color:#6d4b29"></p>
+</div>
+<div class="panel"><h2>Products</h2><p style="font-size:12px;color:#76695d">Use the ↑ / ↓ arrows to change the order products appear on the store page.</p>
+<div id="productsList"></div></div>
+</section>
+
+<section id="collections" class="grid hidden">
+<div class="panel">
+<h2>Add / Edit Collection</h2>
+<input id="colid" placeholder="Collection ID (leave blank to auto-generate)">
+<input id="colname" placeholder="Collection name e.g. Single Origin">
+<input id="colimg" placeholder="Image URL">
+<input id="collink" placeholder="Link (optional, default #store)">
+<button class="primary" onclick="saveCollection()">Save Collection</button>
+<button class="secondary" onclick="clearCollectionForm()">Clear</button>
+<p id="collectionSaved" style="color:#6d4b29"></p>
+</div>
+<div class="panel"><h2>Collections</h2><p style="font-size:12px;color:#76695d">Use the ↑ / ↓ arrows to change the order collections appear on the store page.</p><div id="collectionsList"></div></div>
+</section>
+
+<section id="orders" class="hidden">
+<div class="cards">
+ <div class="card"><div class="num" id="ordNew">0</div>New Orders</div>
+ <div class="card"><div class="num" id="ordReady">0</div>Ready</div>
+ <div class="card"><div class="num" id="ordSales">AED 0.00</div>Today's Orders</div>
+</div>
+<div class="panel">
+<div class="orow" style="align-items:center;margin-bottom:6px"><h2 style="margin:0">Customer Orders</h2><button class="secondary" onclick="renderOrders()">Refresh</button></div>
+<p style="font-size:12px;color:#76695d;margin-top:-6px">Mark orders Ready or Cancelled, and print a customer invoice, right from here.</p>
+<div id="ordersList"></div>
+</div>
+</section>
+
+<section id="customers" class="panel hidden">
+<h2>Customers</h2>
+<p style="font-size:12px;color:#76695d;margin-top:-6px">Built automatically from your order history, grouped by phone number.</p>
+<div id="customersList"></div>
+</section>
+
+
+<section id="content" class="grid hidden">
+  <div class="panel full">
+    <h2>Store Content Control</h2>
+    <p style="color:#76695d">Edit the customer website text, navigation labels, collections, best sellers, delivery, returns and contact details from this one page.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Top Bar & Navigation</h3>
+    <label>Top Bar Text</label>
+    <input id="s_topbar" placeholder="FRESHLY ROASTED COFFEE • UAE DELIVERY">
+    <label>Home Label</label>
+    <input id="s_home" placeholder="Home">
+    <label>Our Story Label</label>
+    <input id="s_storynav" placeholder="Our Story">
+    <label>Shop Label</label>
+    <input id="s_shop" placeholder="Shop">
+    <label>Coffee Beans Label</label>
+    <input id="s_coffee" placeholder="Coffee Beans">
+    <label>Collections Label</label>
+    <input id="s_collections" placeholder="Collections">
+    <label>Best Sellers Label</label>
+    <input id="s_best" placeholder="Best Sellers">
+    <label>About Us Label</label>
+    <input id="s_aboutnav" placeholder="About Us">
+    <label>Contact Label</label>
+    <input id="s_contactnav" placeholder="Contact">
+  </div>
+
+  <div class="panel">
+    <h3>Hero Section</h3>
+    <label>Eyebrow</label>
+    <input id="s_eyebrow" placeholder="SPECIALTY COFFEE, PERFECTLY ROASTED">
+    <label>Hero Title</label>
+    <input id="s_herotitle" placeholder="Fresh Coffee Beans | Roasted With Passion">
+    <label>Hero Description</label>
+    <textarea id="s_herodesc" style="width:100%;min-height:90px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Hero Button</label>
+    <input id="s_herobutton" placeholder="SHOP NOW">
+    <label style="margin-top:14px">Background Image</label>
+    <input type="hidden" id="s_herobgimg">
+    <div id="s_herobgimg_preview"></div>
+    <input type="file" accept="image/*" onchange="handleImageUpload(event,'s_herobgimg')">
+    <button type="button" class="secondary" onclick="clearImage('s_herobgimg')" style="margin-top:6px">Remove Background Image</button>
+    <p style="font-size:12px;color:#76695d;margin-top:8px">Upload a wide photo (coffee beans, café interior, etc.) to use as the hero section's background on the store. Leave empty to keep the default plain background.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Featured Coffee / Best Sellers / New Arrivals</h3>
+    <label>Section Title</label>
+    <input id="s_storetitle" placeholder="Featured Coffee">
+    <label>Section Description</label>
+    <textarea id="s_storedesc" style="width:100%;min-height:80px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Best Sellers Title</label>
+    <input id="s_besttitle" placeholder="Best Sellers">
+    <label>Best Sellers Description</label>
+    <textarea id="s_bestdesc" style="width:100%;min-height:80px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <p style="font-size:12px;color:#76695d;margin:6px 0">The Best Sellers section on the store automatically shows any product whose <b>Badge</b> (Products tab) contains "BEST" — e.g. set a product's badge to <b>BEST SELLER</b> to feature it there.</p>
+    <label>New Arrivals Title</label>
+    <input id="s_newarrivalstitle" placeholder="New Arrivals">
+    <label>New Arrivals Description</label>
+    <textarea id="s_newarrivalsdesc" style="width:100%;min-height:80px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <p style="font-size:12px;color:#76695d;margin:6px 0">The New Arrivals section shows any product whose <b>Badge</b> contains "NEW".</p>
+  </div>
+
+  <div class="panel">
+    <h3>Our Story</h3>
+    <p style="font-size:12px;color:#76695d;margin-top:-6px">A narrative section shown near the top of the store, telling customers about Ambrosia's coffee, sourcing and roasting.</p>
+    <label>Heading</label>
+    <input id="s_storytitle" placeholder="Our Coffee Story">
+    <label style="margin-top:14px">Photo (optional)</label>
+    <input type="hidden" id="s_storyimg">
+    <div id="s_storyimg_preview"></div>
+    <input type="file" accept="image/*" onchange="handleImageUpload(event,'s_storyimg')">
+    <button type="button" class="secondary" onclick="clearImage('s_storyimg')" style="margin-top:6px">Remove Photo</button>
+    <p style="font-size:12px;color:#76695d;margin-top:8px">Upload a real photo of your coffee, roastery or team. Leave empty and the story shows as a clean text-only section — no placeholder photo is ever shown.</p>
+    <label>Story Text</label>
+    <textarea id="s_storytext" style="width:100%;min-height:110px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+  </div>
+
+  <div class="panel">
+    <h3>Collections</h3>
+    <label>Collections Heading</label>
+    <input id="s_collectiontitle" placeholder="Our Coffee Collection">
+    <label>Collections Description</label>
+    <input id="s_collectiondesc" placeholder="Choose your favourite style of coffee.">
+    <p style="font-size:12px;color:#76695d;margin-top:10px">To add, edit, remove or reorder the collection cards themselves, use the <b>Collections</b> tab above.</p>
+  </div>
+
+  <div class="panel">
+    <h3>About / Help</h3>
+    <label>About Heading</label>
+    <input id="s_abouttitle" placeholder="Need help choosing your coffee?">
+    <label style="margin-top:14px">Photo (optional)</label>
+    <input type="hidden" id="s_aboutimg">
+    <div id="s_aboutimg_preview"></div>
+    <input type="file" accept="image/*" onchange="handleImageUpload(event,'s_aboutimg')">
+    <button type="button" class="secondary" onclick="clearImage('s_aboutimg')" style="margin-top:6px">Remove Photo</button>
+    <p style="font-size:12px;color:#76695d;margin-top:8px">This is a separate photo from the Our Story photo above — the About Us page won't reuse that image. Leave empty for a clean text-only layout.</p>
+    <label>About Text</label>
+    <textarea id="s_abouttext" style="width:100%;min-height:100px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Help Button</label>
+    <input id="s_helpbutton" placeholder="Ask For Help">
+  </div>
+
+  <div class="panel">
+    <h3>Delivery & Returns</h3>
+    <label>Delivery Title</label>
+    <input id="s_deliverytitle" placeholder="Delivery">
+    <label>Delivery Text</label>
+    <textarea id="s_delivery" style="width:100%;min-height:90px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Returns Title</label>
+    <input id="s_returnstitle" placeholder="Returns">
+    <label>Returns Text</label>
+    <textarea id="s_returns" style="width:100%;min-height:90px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+  </div>
+
+  <div class="panel">
+    <h3>Invoice & Branding</h3>
+    <p style="font-size:12px;color:#76695d;margin-top:-6px">Shown on printed customer invoices (Orders tab → Print Invoice), and can also be used as your store logo.</p>
+    <label>Logo Image URL</label>
+    <input id="s_logourl" placeholder="https://your-logo-image-url.png">
+    <label>Store Legal / Display Name</label>
+    <input id="s_invoicename" placeholder="Ambrosia Coffee Beans">
+    <label>Invoice Footer Note</label>
+    <input id="s_invoicenote" placeholder="Thank you for your order!">
+  </div>
+
+  <div class="panel">
+    <h3>Contact & Footer</h3>
+    <label>Email</label>
+    <input id="s_email" placeholder="info@ambrosiacoffee.ae">
+    <label>WhatsApp <span style="font-weight:400;color:#8a7968">(used for footer text AND the floating WhatsApp chat button on the store — include full number with country code, e.g. 9715XXXXXXXX)</span></label>
+    <input id="s_whatsapp" placeholder="9715XXXXXXXX">
+    <label>UAE Contact Text</label>
+    <input id="s_uae" placeholder="UAE">
+    <label>Footer Brand</label>
+    <input id="s_footerbrand" placeholder="AMBROSIA COFFEE BEANS">
+    <label>Footer Description</label>
+    <textarea id="s_footerdesc" style="width:100%;min-height:80px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Copyright</label>
+    <input id="s_copyright" placeholder="© 2026 Ambrosia Coffee Beans. All Rights Reserved.">
+  </div>
+
+  <div class="panel full">
+    <div class="actions">
+      <button class="primary" onclick="saveContent()">Save All Store Content</button>
+      <button class="secondary" onclick="loadContent()">Reload Saved Content</button>
+      <button class="secondary" onclick="resetContent()">Reset Content</button>
+    </div>
+    <p id="contentSaved" style="color:#6d4b29"></p>
+  </div>
+</section>
+
+<section id="settings" class="panel hidden">
+<h2>Store Settings</h2>
+<div style="margin-bottom:18px">
+<label style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Delivery Charge (AED)</label>
+<input id="s_deliverycharge" type="number" step=".01" min="0" placeholder="30.00" style="max-width:220px">
+<button class="primary" onclick="saveDeliveryCharge()">Save Delivery Charge</button>
+<p id="deliveryChargeStatus" style="color:#6d4b29;font-size:13px"></p>
+<p style="font-size:12px;color:#76695d;margin-top:-4px">This is the delivery fee applied on the customer checkout page. Orders already placed keep the delivery charge that was in effect when they were made.</p>
+</div>
+<div style="margin-top:22px;padding-top:18px;border-top:1px solid #e6dacb">
+<h3 style="margin-top:0">Change Admin Password</h3>
+<p style="font-size:12px;color:#76695d;margin-top:-4px">This changes the password required to sign in to this admin panel. It's saved to Firebase, so it applies immediately on any device.</p>
+<input id="newPass1" type="password" placeholder="New password (min 6 characters)">
+<input id="newPass2" type="password" placeholder="Confirm new password">
+<button class="primary" onclick="changePassword()">Update Password</button>
+<p id="passChangeStatus" style="color:#6d4b29;font-size:13px"></p>
+</div>
+</section>
+</main></div>
+
+<div class="modal-scrim" id="customerDetailOverlay" onclick="if(event.target===this)closeCustomerDetail()">
+<div class="modal-box">
+<button class="modal-close-btn" onclick="closeCustomerDetail()">×</button>
+<h3>Customer Details</h3>
+<div id="customerDetailBody"></div>
+</div>
+</div>
+
+<div class="modal-scrim" id="statusConfirmOverlay" onclick="if(event.target===this)cancelStatusChange()">
+<div class="modal-box" style="max-width:380px;text-align:center">
+<h3 id="confirmTitle">Change order status?</h3>
+<p id="confirmText" style="color:#6b5b4c;font-size:14px;line-height:1.6"></p>
+<div style="display:flex;gap:10px">
+<button class="secondary" style="flex:1" onclick="cancelStatusChange()">Cancel</button>
+<button class="primary" id="confirmBtn" style="flex:1" onclick="confirmStatusChange()">Confirm</button>
+</div>
+</div>
+</div>
+
+<div class="modal-scrim" id="invoiceOverlay" onclick="if(event.target===this)closeInvoice()">
+<div class="modal-box invoice-box">
+<button class="modal-close-btn no-print" onclick="closeInvoice()">×</button>
+<div id="invoicePrintArea"></div>
+<div class="no-print" style="margin-top:16px;display:flex;gap:10px">
+<button class="primary" style="flex:1" onclick="window.print()">Print / Save as PDF</button>
+<button class="secondary" style="flex:1" onclick="closeInvoice()">Close</button>
+</div>
+</div>
+</div>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyDG8LoYwrSoRsyU8WI0180vD4fcNS5FXxY",
+  authDomain:"ambrosiaspecialty.firebaseapp.com",
+  databaseURL:"https://ambrosiaspecialty-default-rtdb.firebaseio.com",
+  projectId:"ambrosiaspecialty"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+// The customer-facing site (index.html) signs in anonymously before writing
+// anything (carts, orders, messages) — this file never did. If the Firebase
+// project's security rules require `auth != null` for writes (the normal,
+// recommended setup), every save from this admin panel would silently fail
+// with a permission error while looking like it worked in the UI: an image
+// upload shows its preview locally, "Save" shows the success message (the
+// error only surfaces if something checks the promise rejection), but
+// nothing actually reaches the database — explaining saved changes that
+// never show up on the live site. Signing in here the same way fixes that.
+let adminAuthReady=false;
+firebase.auth().onAuthStateChanged(user=>{
+ if(user){adminAuthReady=true;}
+ else{firebase.auth().signInAnonymously().catch(e=>console.error("Admin anonymous sign-in failed:",e));}
+});
+// Every write below awaits this first. Sign-in happens in the background as
+// soon as the page loads, but it needs a network round trip — if a save
+// button is clicked in that brief window, adminAuthReady is still false and
+// the write would be rejected by the ".write":"auth != null" rule with a
+// PERMISSION_DENIED that has nothing to do with the rules being wrong. This
+// just waits for sign-in to actually finish (up to 10s) before writing, and
+// throws a clear error if auth genuinely never succeeds (e.g. the Anonymous
+// sign-in provider isn't enabled in the Firebase console).
+function ensureAuth(){
+ if(adminAuthReady||firebase.auth().currentUser)return Promise.resolve();
+ return new Promise((resolve,reject)=>{
+  let done=false;
+  let unsub=firebase.auth().onAuthStateChanged(user=>{
+   if(user&&!done){done=true;unsub();resolve();}
+  });
+  setTimeout(()=>{
+   if(!done){done=true;unsub();reject(new Error("Still not signed in after 10s — check that Anonymous sign-in is enabled under Authentication > Sign-in method in the Firebase console."));}
+  },10000);
+ });
+}
+
+const PASS="admin123";
+const defaultSettings={
+topbar:"FRESHLY ROASTED COFFEE • UAE DELIVERY",home:"Home",shop:"Store",coffee:"Coffee Beans",collections:"Collections",best:"Best Sellers",aboutnav:"About Us",contactnav:"Contact",
+eyebrow:"SPECIALTY COFFEE, PERFECTLY ROASTED",herotitle:"Fresh Coffee Beans | Roasted With Passion",herodesc:"Discover premium single origin and signature blends, roasted to perfection and delivered fresh to your door.",herobutton:"SHOP NOW",herobgimg:"",
+storetitle:"Featured Coffee",storedesc:"Our most popular coffees, selected for everyday brewing.",besttitle:"Best Sellers",bestdesc:"Our customer favourites, roasted fresh and ready to enjoy.",
+collectiontitle:"Our Coffee Collection",collectiondesc:"Choose your favourite style of coffee.",
+abouttitle:"Need help choosing your coffee?",aboutimg:"",abouttext:"Ambrosia is built around a simple belief: exceptional coffee doesn't need to be complicated. We carefully source 100% Arabica beans, work with trusted growers, and roast in small batches to preserve the natural character of every origin.\n\nFrom our roastery to your door, our goal is to make speciality coffee part of everyday life across the UAE — one carefully roasted cup at a time.",helpbutton:"Ask For Help",
+deliverytitle:"Delivery",delivery:"Fast delivery across the UAE. Delivery charges are AED 30.00.",returnstitle:"Returns",returns:"Please contact us if your order arrives damaged or incorrect. We will review the issue and assist you.",
+email:"info@ambrosiacoffee.ae",whatsapp:"+971",uae:"UAE",footerbrand:"AMBROSIA COFFEE BEANS",footerdesc:"Freshly roasted coffee beans for homes, cafés and coffee lovers across the UAE.",copyright:"© 2026 Ambrosia Coffee Beans. All Rights Reserved.",
+logourl:"data:image/png;base64,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",invoicename:"Ambrosia Coffee Beans",invoicenote:"Thank you for your order!",deliverycharge:30,
+newarrivalstitle:"New Arrivals",newarrivalsdesc:"Fresh roasts, just added to our collection.",
+storynav:"Our Story",
+storytitle:"Our Coffee Story",storyimg:"",storytext:"From the highlands of Ethiopia to your cup — Ambrosia sources exceptional Arabica beans and roasts them fresh in small batches, so every bag delivers a truly premium coffee experience."
+};
+
+// NOTE: `products` / `collections` are only ever populated from a live Firebase
+// snapshot (or left empty until the first snapshot arrives). They are NEVER used
+// as the source of truth for a save — every write below targets a single record
+// at products/{id} or collections/{id}, so a stale/partial local copy can no
+// longer wipe out other people's data. `productsReady` / `collectionsReady`
+// track whether the first real snapshot has arrived yet.
+let products=[];
+let collections=[];
+let productsReady=false,collectionsReady=false;
+
+function toKeyedObject(list){let o={};list.forEach((p,i)=>{o[String(p.id)]={...p,order:i};});return o;}
+
+async function login(btn){
+ let typed=document.getElementById("pass").value;
+ document.getElementById("err").textContent="";
+ if(btn){btn.disabled=true;btn.textContent="Checking...";}
+ try{
+  let snap=await db.ref("adminAuth/password").once("value");
+  let stored=snap.val();
+  let correct=stored?typed===stored:typed===PASS;
+  if(correct){sessionStorage.admin="1";openApp();}
+  else document.getElementById("err").textContent="Incorrect password";
+ }catch(e){
+  // If Firebase can't be reached, still allow the original default password
+  // to work so nobody gets permanently locked out of their own store.
+  if(typed===PASS){sessionStorage.admin="1";openApp();}
+  else document.getElementById("err").textContent="Incorrect password (and couldn't reach Firebase to check a changed password)";
+ }
+ if(btn){btn.disabled=false;btn.textContent="Sign In";}
+}
+function openApp(){document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";renderProducts();renderCollections();renderOrders();renderCustomers();loadContent();subscribeFirebase();}
+function logout(){sessionStorage.removeItem("admin");location.reload();}
+if(sessionStorage.admin==="1")openApp();
+
+function subscribeFirebase(){
+ let productsMigrating=false;
+ db.ref("products").on("value",s=>{
+  let v=s.val();
+  if(v&&typeof v==="object"&&!Array.isArray(v)){
+   products=Object.entries(v).map(([id,p])=>({...p,id})).sort((a,b)=>(a.order??0)-(b.order??0));
+  }else if(Array.isArray(v)){
+   let rawList=v.filter(Boolean).map((p,i)=>({...p,order:p.order??i}));
+   // Legacy array-shaped data can silently hold two entries with the same
+   // id (the original bug this admin panel used to have). De-dupe it for
+   // display immediately (last one with a given id wins) so the admin list
+   // never shows a duplicate row even for the brief moment before the
+   // migration below finishes writing back to Firebase.
+   let seen=new Map();
+   rawList.forEach(p=>seen.set(String(p.id),p));
+   let list=Array.from(seen.values()).sort((a,b)=>(a.order??0)-(b.order??0));
+   products=list;
+   // Auto-fix it in place, once, the moment we see it — no manual step
+   // required. Writing through toKeyedObject collapses any duplicate ids
+   // (last one wins) and switches Firebase over to the safe products/{id}
+   // shape for good.
+   if(!productsMigrating){
+    productsMigrating=true;
+    ensureAuth().then(()=>db.ref("products").set(toKeyedObject(list))).catch(e=>console.error("Product auto-migration failed:",e));
+   }
+  }else{
+   products=[];
+  }
+  productsReady=true;
+  renderProducts();
+ });
+ db.ref("collections").on("value",s=>{
+  let v=s.val();
+  if(v&&typeof v==="object"&&!Array.isArray(v)){
+   collections=Object.entries(v).map(([id,c])=>({...c,id})).sort((a,b)=>(a.order??0)-(b.order??0));
+  }else if(Array.isArray(v)){
+   collections=v.filter(Boolean).map((c,i)=>({...c,order:c.order??i}));
+  }else{
+   collections=[];
+  }
+  collectionsReady=true;
+  renderCollections();
+  renderCategoryOptions();
+ });
+ db.ref("orders").on("value",s=>{ordersData=s.val()||{};renderOrders();renderCustomers();});
+ db.ref("settings").on("value",s=>{if(s.val()){let x=s.val();Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]??defaultSettings[k]));renderImagePreview("s_herobgimg");renderImagePreview("s_storyimg");renderImagePreview("s_aboutimg");}});
+}
+function getSizeForm(){return {
+g200:{enabled:document.getElementById("size200_enabled").checked,price:+document.getElementById("size200_price").value||0,old:+document.getElementById("size200_old").value||0},
+g250:{enabled:document.getElementById("size250_enabled").checked,price:+document.getElementById("size250_price").value||0,old:+document.getElementById("size250_old").value||0},
+kg1:{enabled:document.getElementById("size1kg_enabled").checked,price:+document.getElementById("size1kg_price").value||0,old:+document.getElementById("size1kg_old").value||0}}}
+async function saveProduct(){
+ let typedId=document.getElementById("pid").value.trim();
+ let name=document.getElementById("pname").value.trim();
+ if(!typedId&&name){
+  // The ID field was left blank, which normally means "this is a brand new
+  // product". But if a product with this exact name already exists, saving
+  // now would silently create a second, duplicate product instead of
+  // updating the one the person almost certainly means to edit. Catch that
+  // here, before anything is written to Firebase.
+  let match=products.find(x=>(x.name||"").trim().toLowerCase()===name.toLowerCase());
+  if(match){
+   if(confirm(`A product named "${name}" already exists (AED ${Number(match.price||0).toFixed(2)}). Do you want to update that existing product instead of creating a new, separate one?\n\nOK = update the existing product.\nCancel = create a new, separate product with this name anyway.`)){
+    document.getElementById("pid").value=match.id;
+    typedId=String(match.id);
+   }
+  }
+ }
+ let id=typedId||Date.now(),sizes=getSizeForm();
+ // "Price" and "Old price" at the top mirror whichever pack size is used as
+ // the product's headline price on the store grid/card. If any pack size
+ // below is enabled with a price, that size's own price AND old price win —
+ // the top fields are only a fallback for the rare product with no pack
+ // sizes enabled at all. This keeps the two in sync so the "Old Price" typed
+ // into a pack size row actually shows as the sale price on the card, and
+ // there's no second, disconnected place that has to be kept in sync by hand.
+ let enabled=Object.values(sizes).filter(x=>x.enabled&&x.price>0);
+ let basePrice=enabled.length?enabled[0].price:(+document.getElementById("pprice").value||0);
+ let baseOld=enabled.length?(enabled[0].old||0):(+document.getElementById("pold").value||0);
+ let imgs=["pimg1","pimg2","pimg3"].map(k=>document.getElementById(k).value.trim()).filter(Boolean);
+ let existing=products.find(x=>String(x.id)===String(id));
+ let order=existing?(existing.order??products.length):products.length;
+ // Category is stored by the collection's stable id (catId) — not just its
+ // name — so renaming a collection later doesn't orphan products that were
+ // already assigned to it. `cat` is still saved alongside as the collection's
+ // current name, purely so older code/displays that only look at `cat` keep
+ // showing something sensible; catId is what actually links them.
+ let catId=document.getElementById("pcat").value;
+ if(catId.startsWith("__missing__")){
+  // Still unresolved — keep showing the old name as a hint, but don't save
+  // the placeholder value itself as if it were a real collection id.
+  let p={id:String(id),name,price:basePrice,old:baseOld,img:imgs[0]||"",gallery:imgs.slice(1),badge:document.getElementById("pbadge").value.trim(),catId:"",cat:catId.replace("__missing__",""),sizes,order,
+rating:+document.getElementById("prating").value||5,reviewCount:+document.getElementById("previewcount").value||0,tastingShort:document.getElementById("ptasting").value.trim(),description:document.getElementById("pdescription").value.trim(),tastingNotes:document.getElementById("ptastingnotes").value.trim(),brewingGuide:document.getElementById("pbrewing").value.trim(),origin:document.getElementById("porigin").value.trim()};
+  if(!p.name||!basePrice)return alert("Product name and at least one size price are required.");
+  try{await ensureAuth();await db.ref("products/"+id).set(p);clearForm();document.getElementById("productSaved").textContent="✓ Product saved to Firebase.";setTimeout(()=>document.getElementById("productSaved").textContent="",2500);}catch(e){alert("Firebase save failed: "+e.message);}
+  return;
+ }
+ let matchedCollection=collections.find(c=>String(c.id)===catId);
+ let p={id:String(id),name,price:basePrice,old:baseOld,img:imgs[0]||"",gallery:imgs.slice(1),badge:document.getElementById("pbadge").value.trim(),catId:catId||"",cat:matchedCollection?matchedCollection.name:catId,sizes,order,
+rating:+document.getElementById("prating").value||5,reviewCount:+document.getElementById("previewcount").value||0,tastingShort:document.getElementById("ptasting").value.trim(),description:document.getElementById("pdescription").value.trim(),tastingNotes:document.getElementById("ptastingnotes").value.trim(),brewingGuide:document.getElementById("pbrewing").value.trim(),origin:document.getElementById("porigin").value.trim()};
+ if(!p.name||!basePrice)return alert("Product name and at least one size price are required.");
+ // Writes ONLY this one product's record — every other product in Firebase
+ // is completely untouched, no matter what this browser's local `products`
+ // list currently looks like. This is the fix for the bug where saving one
+ // product could wipe out every other product.
+ try{
+  await ensureAuth();
+  await db.ref("products/"+id).set(p);
+  clearForm();
+  document.getElementById("productSaved").textContent="✓ Product saved to Firebase.";
+  setTimeout(()=>document.getElementById("productSaved").textContent="",2500);
+ }catch(e){alert("Firebase save failed: "+e.message);}
+}
+function edit(id){
+ let p=products.find(x=>String(x.id)===String(id));if(!p)return;
+ ["pid","pname","pprice","pold","pbadge"].forEach((k,i)=>document.getElementById(k).value=[p.id,p.name,p.price,p.old,p.badge][i]);
+ let allImgs=[p.img,...(p.gallery||[])].filter(Boolean);
+ document.getElementById("pimg1").value=allImgs[0]||"";
+ document.getElementById("pimg2").value=allImgs[1]||"";
+ document.getElementById("pimg3").value=allImgs[2]||"";
+ renderCategoryOptions();
+ let catSel=document.getElementById("pcat");
+ // Prefer the stable catId. Older products saved before this fix only have
+ // `cat` (a name) — for those, find the collection that currently has that
+ // name and select it by id (this one-time lookup is what "migrates" the
+ // product the next time it's saved). Only show "(missing collection)" if
+ // neither the id nor a name match resolves to a real collection.
+ let matchById=p.catId&&collections.find(c=>String(c.id)===String(p.catId));
+ let matchByName=!matchById&&p.cat&&collections.find(c=>c.name===p.cat);
+ let resolved=matchById||matchByName;
+ if(resolved){
+  catSel.value=String(resolved.id);
+ }else if(p.cat||p.catId){
+  let label=p.cat||p.catId;
+  let missingValue="__missing__"+label;
+  if(![...catSel.options].some(o=>o.value===missingValue)){
+   catSel.insertAdjacentHTML("beforeend",`<option value="${missingValue.replace(/"/g,"&quot;")}">${label} (missing collection)</option>`);
+  }
+  catSel.value=missingValue;
+ }
+document.getElementById("prating").value=p.rating??5;document.getElementById("previewcount").value=p.reviewCount??p.reviews??0;document.getElementById("ptasting").value=p.tastingShort||p.shortDescription||"";document.getElementById("pdescription").value=p.description||"";document.getElementById("ptastingnotes").value=p.tastingNotes||"";document.getElementById("pbrewing").value=p.brewingGuide||"";document.getElementById("porigin").value=p.origin||"";let s=p.sizes||{};
+ [["g200","size200"],["g250","size250"],["kg1","size1kg"]].forEach(([k,pre])=>{let x=s[k]||{};document.getElementById(pre+"_enabled").checked=x.enabled!==false;document.getElementById(pre+"_price").value=x.price||"";document.getElementById(pre+"_old").value=x.old||""});
+}
+async function del(id){if(confirm("Delete this product?")){try{await ensureAuth();await db.ref("products/"+id).remove();}catch(e){alert("Firebase delete failed: "+e.message);}}}
+function renderProducts(){document.getElementById("productsList").innerHTML=products.map((p,idx)=>`<div class="product-row"><img src="${p.img}" onerror="this.style.opacity=.25"><div><b>${p.name}</b><br><span class="badge">${p.badge||p.cat}</span> <b>AED ${Number(p.price||0).toFixed(2)}</b></div><div class="actions"><button class="secondary" ${idx===0?"disabled":""} onclick="moveProduct('${String(p.id).replace(/'/g,"\'")}',-1)">↑</button><button class="secondary" ${idx===products.length-1?"disabled":""} onclick="moveProduct('${String(p.id).replace(/'/g,"\'")}',1)">↓</button><button class="secondary" onclick="edit('${String(p.id).replace(/'/g,"\'")}')">Edit</button><button class="danger" onclick="del('${String(p.id).replace(/'/g,"\'")}')">Delete</button></div></div>`).join("");}
+async function moveProduct(id,dir){
+ // Swaps only the `order` field of the two affected products — every other
+ // product record is left completely untouched.
+ let i=products.findIndex(x=>String(x.id)===String(id));if(i<0)return;
+ let j=i+dir;if(j<0||j>=products.length)return;
+ let a=products[i],b=products[j];
+ let orderA=a.order??i,orderB=b.order??j;
+ try{
+  await ensureAuth();
+  await Promise.all([
+   db.ref("products/"+a.id+"/order").set(orderB),
+   db.ref("products/"+b.id+"/order").set(orderA)
+  ]);
+ }catch(e){alert("Firebase save failed: "+e.message);}
+}
+function clearForm(){["pid","pname","pprice","pold","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin"].forEach(x=>document.getElementById(x).value="");["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);}
+
+async function saveCollection(){
+ let typedId=document.getElementById("colid").value.trim();
+ let name=document.getElementById("colname").value.trim();
+ if(!typedId&&name){
+  // Same guard as products: if the ID field is left blank, this is meant to
+  // be a new collection — but if a collection with this exact name already
+  // exists, saving now would silently create a second, duplicate collection
+  // instead of updating the one the person almost certainly means to edit.
+  let match=collections.find(x=>(x.name||"").trim().toLowerCase()===name.toLowerCase());
+  if(match){
+   if(confirm(`A collection named "${name}" already exists. Do you want to update that existing collection instead of creating a new, separate one?\n\nOK = update the existing collection.\nCancel = create a new, separate collection with this name anyway.`)){
+    document.getElementById("colid").value=match.id;
+    typedId=String(match.id);
+   }
+  }
+ }
+ let id=typedId||("col"+Date.now());
+ let existing=collections.find(x=>String(x.id)===String(id));
+ let order=existing?existing.order:collections.length;
+ let c={id:String(id),name,img:document.getElementById("colimg").value.trim(),link:document.getElementById("collink").value.trim()||"#store",order};
+ if(!c.name||!c.img)return alert("Collection name and image are required.");
+ try{
+  await ensureAuth();
+  await db.ref("collections/"+id).set(c);
+  clearCollectionForm();
+  document.getElementById("collectionSaved").textContent="✓ Collection saved to Firebase.";
+  setTimeout(()=>document.getElementById("collectionSaved").textContent="",2500);
+ }catch(e){alert("Firebase save failed: "+e.message);}
+}
+function editCollection(id){
+ let c=collections.find(x=>String(x.id)===String(id));if(!c)return;
+ document.getElementById("colid").value=c.id;
+ document.getElementById("colname").value=c.name;
+ document.getElementById("colimg").value=c.img;
+ document.getElementById("collink").value=c.link||"";
+}
+async function delCollection(id){
+ if(confirm("Delete this collection?")){
+  try{await ensureAuth();await db.ref("collections/"+id).remove();}catch(e){alert("Firebase delete failed: "+e.message);}
+ }
+}
+function clearCollectionForm(){["colid","colname","colimg","collink"].forEach(x=>document.getElementById(x).value="");}
+async function moveCollection(id,dir){
+ let i=collections.findIndex(x=>String(x.id)===String(id));if(i<0)return;
+ let j=i+dir;if(j<0||j>=collections.length)return;
+ let a=collections[i],b=collections[j];
+ let orderA=a.order??i,orderB=b.order??j;
+ try{
+  await ensureAuth();
+  await Promise.all([
+   db.ref("collections/"+a.id+"/order").set(orderB),
+   db.ref("collections/"+b.id+"/order").set(orderA)
+  ]);
+ }catch(e){alert("Firebase save failed: "+e.message);}
+}
+function renderCategoryOptions(){
+ let sel=document.getElementById("pcat");if(!sel)return;
+ let current=sel.value;
+ if(!collections.length){
+  sel.innerHTML=`<option value="">No collections yet — add one in the Collections tab</option>`;
+  return;
+ }
+ // Options are keyed by the collection's stable id, not its name — a product
+ // stays linked to the right collection even if that collection is renamed
+ // later. (See saveProduct/edit for the matching + one-time migration logic.)
+ sel.innerHTML=collections.map(c=>`<option value="${String(c.id).replace(/"/g,"&quot;")}">${c.name}</option>`).join("");
+ if(current&&collections.some(c=>String(c.id)===current))sel.value=current;
+}
+function renderCollections(){
+ let box=document.getElementById("collectionsList");if(!box)return;
+ box.innerHTML=collections.length?collections.map((c,idx)=>`<div class="product-row"><img src="${c.img}" onerror="this.style.opacity=.25"><div><b>${c.name}</b><br><span class="badge">${c.link||"#store"}</span></div><div class="actions"><button class="secondary" ${idx===0?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',-1)">↑</button><button class="secondary" ${idx===collections.length-1?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',1)">↓</button><button class="secondary" onclick="editCollection('${String(c.id).replace(/'/g,"\'")}')">Edit</button><button class="danger" onclick="delCollection('${String(c.id).replace(/'/g,"\'")}')">Delete</button></div></div>`).join(""):"<p>No collections yet.</p>";
+}
+let ordersData={};
+function isToday(iso){if(!iso)return false;let d=new Date(iso),t=new Date();return d.getFullYear()===t.getFullYear()&&d.getMonth()===t.getMonth()&&d.getDate()===t.getDate();}
+function renderOrders(){
+ const list=Object.entries(ordersData).map(([key,x])=>({key,...x})).reverse();
+ document.getElementById("ordNew").textContent=list.filter(x=>(x.status||"New")==="New").length;
+ document.getElementById("ordReady").textContent=list.filter(x=>x.status==="Ready").length;
+ document.getElementById("ordSales").textContent="AED "+list.filter(x=>isToday(x.created)).reduce((s,x)=>s+Number(x.total||0),0).toFixed(2);
+ document.getElementById("ordersList").innerHTML=list.length?list.map(x=>{
+  let name=x.customer?.fullname||x.customer?.name||"Customer",phone=x.customer?.phone||"";
+  let itemsLine=(x.items||[]).map(i=>`${i.qty} × ${i.name||"Coffee"}`).join(" • ");
+  let status=x.status||"New";
+  return `<div class="order-row"><div class="orow"><div><b>${x.orderNo||x.key}</b><br>${name}<br><small style="color:#8a7968">${phone}</small></div><div style="text-align:right"><b>AED ${Number(x.total||0).toFixed(2)}</b><br><span class="badge">${status}</span></div></div><p style="font-size:13px;color:#5a4c3f;margin:8px 0">${itemsLine}</p><div class="orow" style="justify-content:flex-end"><button class="secondary" onclick="viewInvoice('${x.key}')">Print Invoice</button> <button class="primary done-btn" onclick="requestStatus('${x.key}','${status}','Ready')" ${status==="Ready"||status==="Cancelled"?"disabled":""}>Mark Ready</button> <button class="danger" onclick="requestStatus('${x.key}','${status}','Cancelled')" ${status==="Cancelled"?"disabled":""}>Cancel</button> <button class="danger" onclick="deleteOrder('${x.key}')">Delete</button></div></div>`;
+ }).join(""):"<p>No orders saved yet.</p>";
+}
+let pendingChange=null;
+function requestStatus(key,from,to){
+ pendingChange={key,from,to};
+ document.getElementById("confirmTitle").textContent=to==="Cancelled"?"Cancel this order?":"Mark order as Ready?";
+ document.getElementById("confirmText").textContent=`Change order status from "${from}" to "${to}"? ${to==="Cancelled"?"This will notify the customer that their order was cancelled.":"The customer's order will be marked ready for pickup/delivery."}`;
+ let btn=document.getElementById("confirmBtn");
+ btn.className=to==="Cancelled"?"danger":"primary";
+ btn.textContent=to==="Cancelled"?"Yes, Cancel Order":"Yes, Mark Ready";
+ document.getElementById("statusConfirmOverlay").classList.add("open");
+}
+function cancelStatusChange(){pendingChange=null;document.getElementById("statusConfirmOverlay").classList.remove("open");}
+async function confirmStatusChange(){
+ if(!pendingChange)return;
+ const {key,to}=pendingChange;
+ try{await ensureAuth();await db.ref("orders/"+key+"/status").set(to);}catch(e){alert("Firebase update failed: "+e.message);}
+ cancelStatusChange();
+}
+async function deleteOrder(key){
+ if(!confirm("Permanently delete this order? This cannot be undone and the order will disappear from Orders and Customers."))return;
+ try{await ensureAuth();await db.ref("orders/"+key).remove();}catch(e){alert("Firebase delete failed: "+e.message);}
+}
+function viewInvoice(key){
+ let o=ordersData[key];if(!o)return;
+ let s={...defaultSettings};
+ db.ref("settings").once("value").then(snap=>{
+  if(snap.val())s={...s,...snap.val()};
+  let c=o.customer||{};
+  let items=o.items||[];
+  let rows=items.map(i=>`<tr><td>${i.name||"Coffee"}${i.size?` <span style="color:#8a7968">(${i.size})</span>`:""}</td><td>${i.qty}</td><td>AED ${Number(i.price||0).toFixed(2)}</td><td>AED ${(Number(i.price||0)*Number(i.qty||0)).toFixed(2)}</td></tr>`).join("");
+  let addr=[c.address,c.city,c.emirate].filter(Boolean).join(", ");
+  let created=o.created?new Date(o.created).toLocaleString():"";
+  document.getElementById("invoicePrintArea").innerHTML=`
+  <div class="invoice-topbar"></div>
+  <div class="invoice-head">
+   <div>${s.logourl?`<img src="${s.logourl}" alt="Logo">`:`<h2>${s.invoicename||s.footerbrand||"Ambrosia Coffee Beans"}</h2>`}
+    <div class="invoice-brand-contact">${[s.email,s.whatsapp].filter(Boolean).join("  ·  ")}</div>
+   </div>
+   <div class="invoice-meta">
+    <div class="inv-title">INVOICE</div>
+    <div style="margin-top:6px">Order #${o.orderNo||key}</div>
+    <div>${created}</div>
+    <div style="margin-top:4px"><span class="badge">${o.status||"New"}</span></div>
+   </div>
+  </div>
+  <div class="invoice-cols">
+   <div><h4>Bill To</h4><div><b>${c.fullname||c.name||"Customer"}</b></div><div>${c.phone||""}</div><div>${addr}</div></div>
+   <div style="text-align:right"><h4>Payment</h4><div>Cash on Delivery</div></div>
+  </div>
+  <table class="invoice-table"><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Amount</th></tr>${rows}</table>
+  <div class="invoice-totals">
+   <div class="trow"><span>Subtotal</span><span>AED ${Number(o.subtotal||0).toFixed(2)}</span></div>
+   <div class="trow"><span>Delivery</span><span>AED ${Number(o.deliveryCharge||0).toFixed(2)}</span></div>
+   <div class="trow grand"><span>Total</span><span>AED ${Number(o.total||0).toFixed(2)}</span></div>
+  </div>
+  <div class="invoice-footer"><div class="thanks">${s.invoicenote||"Thank you for your order!"}</div>${[s.email,s.whatsapp].filter(Boolean).join("  ·  ")}</div>`;
+  document.getElementById("invoiceOverlay").classList.add("open");
+ });
+}
+function closeInvoice(){document.getElementById("invoiceOverlay").classList.remove("open");}
+
+let customersData=[];
+function renderCustomers(){
+ let raw=ordersData;
+ let map={};
+ Object.entries(raw).forEach(([key,x])=>{
+  let c=x.customer||{};
+  let phoneKey=(c.phone||"").trim()||("email:"+(c.email||"unknown-"+key));
+  if(!map[phoneKey])map[phoneKey]={name:c.fullname||c.name||"Customer",phone:c.phone||"-",email:c.email||"-",city:c.city||"",emirate:c.emirate||"",orders:[],total:0,lastCreated:""};
+  let m=map[phoneKey];
+  m.orders.push({key,orderNo:x.orderNo||key,total:Number(x.total||0),status:x.status||"New",created:x.created||"",items:x.items||[]});
+  m.total+=Number(x.total||0);
+  if(x.created&&x.created>m.lastCreated){m.lastCreated=x.created;m.name=c.fullname||c.name||m.name;m.email=c.email||m.email;m.city=c.city||m.city;m.emirate=c.emirate||m.emirate;}
+ });
+ customersData=Object.values(map).sort((a,b)=>(b.lastCreated||"").localeCompare(a.lastCreated||""));
+ let box=document.getElementById("customersList");if(!box)return;
+ box.innerHTML=customersData.length?`<table><tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Last Order</th><th></th></tr>${customersData.map((c,i)=>`<tr><td>${c.name}</td><td>${c.phone}</td><td>${c.orders.length}</td><td>AED ${c.total.toFixed(2)}</td><td>${c.lastCreated?new Date(c.lastCreated).toLocaleDateString():"-"}</td><td><button class="secondary" onclick="viewCustomer(${i})">View</button></td></tr>`).join("")}</table>`:"<p>No customers yet — they'll appear here automatically once orders come in.</p>";
+}
+function viewCustomer(i){
+ let c=customersData[i];if(!c)return;
+ document.getElementById("customerDetailBody").innerHTML=`<p><b>${c.name}</b><br>${c.phone}${c.email&&c.email!=="-"?" · "+c.email:""}<br>${[c.city,c.emirate].filter(Boolean).join(", ")}</p><h4 style="margin:18px 0 8px">Order History (${c.orders.length})</h4>${c.orders.slice().reverse().map(o=>`<div class="product-row" style="grid-template-columns:1fr auto auto"><div><b>${o.orderNo}</b><br><span class="badge">${o.status}</span> ${o.created?"· "+new Date(o.created).toLocaleString():""}</div><div><b>AED ${o.total.toFixed(2)}</b></div><div><button class="danger" onclick="deleteOrderFromCustomer('${o.key}',${i})">Delete</button></div></div>`).join("")}`;
+ document.getElementById("customerDetailOverlay").classList.add("open");
+}
+async function deleteOrderFromCustomer(key,customerIdx){
+ if(!confirm("Permanently delete this order? This cannot be undone."))return;
+ try{
+  await ensureAuth();
+  await db.ref("orders/"+key).remove();
+  // Refresh the customer list/detail once Firebase's onValue listener re-fires
+  // and renderCustomers() rebuilds customersData; give it a moment then
+  // reopen the same customer's (now-updated) order list.
+  setTimeout(()=>{if(customersData[customerIdx])viewCustomer(customerIdx);else closeCustomerDetail();},400);
+ }catch(e){alert("Firebase delete failed: "+e.message);}
+}
+function closeCustomerDetail(){document.getElementById("customerDetailOverlay").classList.remove("open");}
+
+function showTab(id,btn){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");if(id==="content")loadContent();}
+function val(id){return document.getElementById(id).value}
+function setv(id,v){let e=document.getElementById(id);if(e)e.value=v??""}
+// Image fields (currently just the hero background) are stored as a base64
+// data-URI directly in the hidden s_<field> input, same way logourl already
+// works — no separate storage system needed. This just adds a file-picker
+// + thumbnail on top of that existing pattern.
+function handleImageUpload(e,targetId){
+ let file=e.target.files&&e.target.files[0];
+ if(!file)return;
+ if(file.size>700*1024){alert("Please choose an image under 700KB — this keeps the store fast to load. Compress it first (e.g. tinypng.com) if needed.");e.target.value="";return;}
+ let reader=new FileReader();
+ reader.onload=()=>{setv(targetId,reader.result);renderImagePreview(targetId);};
+ reader.onerror=()=>alert("Could not read that image file.");
+ reader.readAsDataURL(file);
+}
+function clearImage(targetId){setv(targetId,"");renderImagePreview(targetId);}
+function renderImagePreview(targetId){
+ let el=document.getElementById(targetId);
+ let v=el?el.value:"";
+ let box=document.getElementById(targetId+"_preview");
+ if(!box)return;
+ box.innerHTML=v?`<img src="${v}" style="max-width:260px;max-height:130px;border-radius:12px;display:block;margin:8px 0;object-fit:cover">`:"";
+}
+function loadContent(){db.ref("settings").once("value").then(s=>{let x={...defaultSettings,...(s.val()||{})};Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]));renderImagePreview("s_herobgimg");renderImagePreview("s_storyimg");renderImagePreview("s_aboutimg");let el=document.getElementById("contentSaved");if(el){el.textContent="✓ Loaded saved content from Firebase.";setTimeout(()=>el.textContent="",2000);}}).catch(e=>alert("Firebase load failed: "+e.message));}
+async function saveContent(){let x={};Object.keys(defaultSettings).forEach(k=>x[k]=val("s_"+k));try{await ensureAuth();await db.ref("settings").set(x);document.getElementById("contentSaved").textContent="✓ Store content saved to Firebase.";setTimeout(()=>document.getElementById("contentSaved").textContent="",2500);}catch(e){alert("Firebase settings save failed: "+e.message);}}
+async function resetContent(){if(confirm("Reset all store content in Firebase? This cannot be undone.")){try{await ensureAuth();await db.ref("settings").set(defaultSettings);loadContent();}catch(e){alert("Firebase reset failed: "+e.message);}}}
+async function saveDeliveryCharge(){
+ let val=+document.getElementById("s_deliverycharge").value;
+ let statusEl=document.getElementById("deliveryChargeStatus");
+ statusEl.style.color="#6d4b29";
+ if(!(val>=0)){statusEl.style.color="#9a4435";statusEl.textContent="Enter a valid delivery charge (0 or more).";return;}
+ try{
+  // Only touches the deliverycharge field — every other store-content
+  // setting (hero text, contact info, etc.) is read fresh from Firebase
+  // first and left untouched, so this never overwrites unrelated settings.
+  let snap=await db.ref("settings").once("value");
+  let current={...defaultSettings,...(snap.val()||{})};
+  current.deliverycharge=val;
+  await ensureAuth();
+  await db.ref("settings").set(current);
+  statusEl.textContent="✓ Delivery charge saved: AED "+val.toFixed(2);
+  setTimeout(()=>statusEl.textContent="",3000);
+ }catch(e){statusEl.style.color="#9a4435";statusEl.textContent="Firebase save failed: "+e.message;}
+}
+async function changePassword(){
+ let p1=document.getElementById("newPass1").value,p2=document.getElementById("newPass2").value;
+ let statusEl=document.getElementById("passChangeStatus");
+ statusEl.style.color="#6d4b29";
+ if(!p1||p1.length<6){statusEl.style.color="#9a4435";statusEl.textContent="Password must be at least 6 characters.";return;}
+ if(p1!==p2){statusEl.style.color="#9a4435";statusEl.textContent="Passwords do not match.";return;}
+ if(!confirm("Change the admin password now? Make sure to remember it — you'll need it to sign in next time."))return;
+ try{
+  await ensureAuth();
+  await db.ref("adminAuth/password").set(p1);
+  document.getElementById("newPass1").value="";
+  document.getElementById("newPass2").value="";
+  statusEl.textContent="✓ Password updated. Use the new password next time you sign in.";
+  setTimeout(()=>statusEl.textContent="",5000);
+ }catch(e){statusEl.style.color="#9a4435";statusEl.textContent="Firebase save failed: "+e.message;}
+}
+</script>
+</body></html>
