@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ambrosia — Admin</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4eee5;color:#30251d}
+button,input,select{font:inherit}button{cursor:pointer}
+.login{min-height:100vh;display:grid;place-items:center;background:linear-gradient(135deg,#eee2d3,#fbf8f2)}
+.login-box,.panel{background:rgba(255,253,249,.72);border:1px solid rgba(255,255,255,.85);backdrop-filter:blur(20px);box-shadow:0 20px 60px #5b43231c;border-radius:24px}
+.login-box{width:min(420px,92%);padding:36px}.login-box h1{font-family:Georgia,serif;margin:0 0 8px}.login-box p{color:#76695d}
+input,select{width:100%;padding:12px 14px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4;margin:7px 0 12px}
+button{border:0;border-radius:999px;padding:11px 17px}.panel label{display:block;font-size:12px;color:#76695d;margin-top:7px}.panel textarea{font:inherit}.primary{background:linear-gradient(135deg,#a96d2e,#c49351);color:white}.secondary{background:#eee4d7;color:#49392c}.danger{background:#8d3e32;color:white}
+.app{display:none}.top{padding:18px 28px;display:flex;align-items:center;justify-content:space-between;background:rgba(255,252,246,.72);backdrop-filter:blur(18px);border-bottom:1px solid #fff}
+.top h1{font-family:Georgia,serif;margin:0}.wrap{max-width:1200px;margin:auto;padding:28px 18px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.tab.active{background:#3d3026;color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.panel{padding:20px}.full{grid-column:1/-1}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px;border-bottom:1px solid #e4d9ca;font-size:14px}
+.badge{display:inline-block;padding:5px 9px;border-radius:999px;background:#ead9bd;color:#6d4b29;font-size:12px}
+.product-row{display:grid;grid-template-columns:70px 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid #e5dacb}
+.product-row img{width:70px;height:70px;object-fit:cover;border-radius:12px;background:#eee}
+.actions{display:flex;gap:7px;flex-wrap:wrap}
+.hidden{display:none}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;z-index:2000;padding:13px 22px;border-radius:999px;font-size:14px;font-weight:600;box-shadow:0 14px 40px rgba(40,25,10,.25);transition:opacity .25s ease,transform .25s ease;pointer-events:none;max-width:90vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.toast.ok{background:#2f5a2a;color:#fff}.toast.err{background:#8d3e32;color:#fff}
+button:disabled{opacity:.55;cursor:default}
+.editing-note{display:none;margin:-4px 0 12px;padding:9px 12px;border-radius:12px;background:#f3e3c7;color:#6d4b29;font-size:13px}
+.editing-note.show{display:block}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.top{padding:15px}.wrap{padding:18px 12px}}
+.modal-scrim{display:none;position:fixed;inset:0;background:rgba(35,25,17,.45);backdrop-filter:blur(6px);z-index:900;align-items:center;justify-content:center;padding:20px}
+.modal-scrim.open{display:flex}
+.modal-box{background:#fffaf3;border-radius:20px;padding:26px;max-width:480px;width:100%;max-height:82vh;overflow:auto;box-shadow:0 30px 70px rgba(40,25,10,.25)}
+.modal-box h3{font-family:Georgia,serif;margin:0 0 14px;font-size:22px}
+.modal-close-btn{float:right;border:0;background:#eee4d7;width:30px;height:30px;border-radius:50%;font-size:16px;cursor:pointer;color:#49392c}
+.img-upload-row{display:flex;align-items:center;gap:10px;margin:-4px 0 12px}
+.upload-btn{display:inline-flex;align-items:center;padding:9px 16px;border-radius:999px;background:#eee4d7;color:#49392c;font-size:12px;font-weight:600;cursor:pointer;border:1px solid #ddccb8}
+.upload-btn:hover{background:#e6dbca}
+.upload-btn input[type=file]{display:none}
+.img-upload-preview{display:none;width:44px;height:44px;object-fit:cover;border-radius:10px;background:#eee}
+.img-upload-preview.show{display:block}
+.upload-hint{font-size:11px;color:#8a7968;margin:-4px 0 12px}
+#invoicePrintArea{border-radius:0;box-shadow:none;border:none;background:#fff}
+@media print{
+ body *{visibility:hidden}
+ #invoicePrintArea,#invoicePrintArea *{visibility:visible}
+ #invoicePrintArea{position:absolute;left:0;top:0;width:100%;box-shadow:none;max-height:none;overflow:visible}
+ .no-print{display:none!important}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<style>.size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.size-grid input{width:100%;margin-top:6px}@media(max-width:700px){.size-grid{grid-template-columns:1fr}}</style><style>textarea{width:100%;min-height:70px;resize:vertical}#prating,#previewcount{width:48%;display:inline-block;margin-right:1%}</style></head>
+<body>
+<div id="login" class="login">
+  <div class="login-box">
+    <h1>AMBROSIA</h1><p>Admin Control Panel</p>
+    <input id="email" type="email" placeholder="Admin email" autocomplete="username">
+    <input id="pass" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key==='Enter')login(document.getElementById('loginBtn'))">
+    <button class="primary" id="loginBtn" style="width:100%" onclick="login(this)">Sign In</button>
+    <p id="err" style="color:#9a4435;font-size:14px;line-height:1.5;word-break:break-word"></p>
+  </div>
+</div>
+
+<div id="app" class="app">
+<header class="top"><h1>Ambrosia Admin</h1><div class="actions" style="align-items:center"><span id="adminWho" style="font-size:12px;color:#76695d"></span><a href="index.html" target="_blank"><button class="secondary">Open Store</button></a><button onclick="logout()">Logout</button></div></header>
+<main class="wrap">
+<div class="tabs">
+<button class="tab active" onclick="showTab('products',this)">Products</button>
+<button class="tab" onclick="showTab('collections',this)">Collections</button>
+<button class="tab" onclick="showTab('orders',this)">Orders</button>
+<button class="tab" onclick="showTab('customers',this)">Customers</button>
+<button class="tab" onclick="showTab('content',this)">Store Content</button>
+<button class="tab" onclick="showTab('messages',this)">Messages <span id="msgCount" class="badge" style="display:none;padding:2px 7px;margin-left:3px"></span></button>
+<button class="tab" onclick="showTab('activity',this)">Activity Log</button>
+<button class="tab" onclick="showTab('settings',this)">Settings</button>
+</div>
+
+<section id="products" class="grid">
+<div class="panel">
+<h2>Add / Edit Product</h2>
+<div class="editing-note" id="editingNote"></div>
+<input type="hidden" id="pid">
+<input id="pname" placeholder="Product name">
+<input id="pimg1" placeholder="Image 1 URL (Main) — or upload below">
+<div class="img-upload-row"><label class="upload-btn">Upload Image 1<input type="file" accept="image/*" onchange="handleImageUpload(this,'pimg1')"></label><img id="pimg1_preview" class="img-upload-preview"></div>
+<input id="pimg2" placeholder="Image 2 URL — or upload below">
+<div class="img-upload-row"><label class="upload-btn">Upload Image 2<input type="file" accept="image/*" onchange="handleImageUpload(this,'pimg2')"></label><img id="pimg2_preview" class="img-upload-preview"></div>
+<input id="pimg3" placeholder="Image 3 URL — or upload below">
+<div class="img-upload-row"><label class="upload-btn">Upload Image 3<input type="file" accept="image/*" onchange="handleImageUpload(this,'pimg3')"></label><img id="pimg3_preview" class="img-upload-preview"></div>
+<input id="pbadge" placeholder="Badge e.g. NEW / SALE / BEST SELLER">
+<select id="pcat"></select>
+<div style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
+<h3 style="margin-top:0">Pack Sizes & Prices</h3>
+<p style="font-size:12px;color:#76695d">Set each pack size and its price. Disable any size you don't sell.<br><b>Stock (packs)</b> = how many packs of that size you have. Each order takes it down automatically; at 0 that size shows <b>Out of Stock</b> on the store. Leave blank for unlimited (not tracked).</p>
+<div class="size-grid">
+<div><label><input type="checkbox" id="size200_enabled" checked> 200g</label><input id="size200_price" type="number" step=".01" placeholder="Price AED"><input id="size200_old" type="number" step=".01" placeholder="Old Price"><span style="display:block;font-size:11px;color:#76695d;margin-top:4px">Stock (packs)</span><input id="size200_stock" type="number" step="1" min="0" placeholder="Unlimited" style="margin-top:2px"></div>
+<div><label><input type="checkbox" id="size250_enabled" checked> 250g</label><input id="size250_price" type="number" step=".01" placeholder="Price AED"><input id="size250_old" type="number" step=".01" placeholder="Old Price"><span style="display:block;font-size:11px;color:#76695d;margin-top:4px">Stock (packs)</span><input id="size250_stock" type="number" step="1" min="0" placeholder="Unlimited" style="margin-top:2px"></div>
+<div><label><input type="checkbox" id="size1kg_enabled" checked> 1 Kg</label><input id="size1kg_price" type="number" step=".01" placeholder="Price AED"><input id="size1kg_old" type="number" step=".01" placeholder="Old Price"><span style="display:block;font-size:11px;color:#76695d;margin-top:4px">Stock (packs)</span><input id="size1kg_stock" type="number" step="1" min="0" placeholder="Unlimited" style="margin-top:2px"></div>
+</div></div><div style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
+<h3 style="margin-top:0">Product Detail Page Content</h3>
+<input id="prating" type="number" step=".1" min="0" max="5" placeholder="Rating e.g. 4.7">
+<input id="previewcount" type="number" min="0" placeholder="Review Count e.g. 154">
+<input id="ptasting" placeholder="Short flavour line e.g. Chocolate · Hazelnut · Caramel">
+<textarea id="pdescription" placeholder="Description"></textarea>
+<textarea id="ptastingnotes" placeholder="Tasting Notes"></textarea>
+<textarea id="pbrewing" placeholder="Brewing Guide"></textarea>
+<input id="porigin" placeholder="Origin e.g. Minas Gerais, Brazil">
+</div>
+<button class="primary" id="saveProductBtn" onclick="saveProduct(this)">Save Product</button>
+<button class="secondary" onclick="clearForm()">Clear</button>
+</div>
+<div class="panel"><div id="stockReturnsBox" style="display:none;background:#f3e3c7;border-radius:14px;padding:14px;margin-bottom:14px;color:#5b3d1c"></div><h2>Products</h2><p style="font-size:12px;color:#76695d">Use the ↑ / ↓ arrows to change the order products appear on the store page.</p><div id="productsList"></div></div>
+</section>
+
+<section id="collections" class="grid hidden">
+<div class="panel">
+<h2>Add / Edit Collection</h2>
+<div class="editing-note" id="colEditingNote"></div>
+<input type="hidden" id="colid">
+<input id="colname" placeholder="Collection name e.g. Single Origin">
+<input id="colimg" placeholder="Image URL — or upload below">
+<div class="img-upload-row"><label class="upload-btn">Upload Image<input type="file" accept="image/*" onchange="handleImageUpload(this,'colimg')"></label><img id="colimg_preview" class="img-upload-preview"></div>
+<input id="collink" placeholder="Link (optional, default #store)">
+<button class="primary" onclick="saveCollection(this)">Save Collection</button>
+<button class="secondary" onclick="clearCollectionForm()">Clear</button>
+</div>
+<div class="panel"><h2>Collections</h2><p style="font-size:12px;color:#76695d">Use the ↑ / ↓ arrows to change the order collections appear on the store page.</p><div id="collectionsList"></div></div>
+</section>
+
+<section id="orders" class="panel hidden">
+<h2>Customer Orders</h2><div id="ordersList"></div>
+</section>
+
+<section id="customers" class="panel hidden">
+<h2>Customers</h2>
+<p style="font-size:12px;color:#76695d;margin-top:-6px">Built automatically from your order history, grouped by phone number.</p>
+<div id="customersList"></div>
+</section>
+
+
+<section id="content" class="grid hidden">
+  <div class="panel full">
+    <h2>Store Content Control</h2>
+    <p style="color:#76695d">Edit the customer website text, navigation labels, collections, best sellers, delivery, returns and contact details from this one page.</p>
+  </div>
+
+  <div class="panel">
+    <h3>Top Bar & Navigation</h3>
+    <label>Top Bar Text</label>
+    <input id="s_topbar" placeholder="FRESHLY ROASTED COFFEE • UAE DELIVERY">
+    <label>Home Label</label>
+    <input id="s_home" placeholder="Home">
+    <label>Shop Label</label>
+    <input id="s_shop" placeholder="Shop">
+    <label>Coffee Beans Label</label>
+    <input id="s_coffee" placeholder="Coffee Beans">
+    <label>Collections Label</label>
+    <input id="s_collections" placeholder="Collections">
+    <label>Best Sellers Label</label>
+    <input id="s_best" placeholder="Best Sellers">
+    <label>About Us Label</label>
+    <input id="s_aboutnav" placeholder="About Us">
+    <label>Contact Label</label>
+    <input id="s_contactnav" placeholder="Contact">
+  </div>
+
+  <div class="panel">
+    <h3>Hero Section</h3>
+    <label>Eyebrow</label>
+    <input id="s_eyebrow" placeholder="SPECIALTY COFFEE, PERFECTLY ROASTED">
+    <label>Hero Title</label>
+    <input id="s_herotitle" placeholder="Fresh Coffee Beans | Roasted With Passion">
+    <label>Hero Description</label>
+    <textarea id="s_herodesc" style="width:100%;min-height:90px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Hero Button</label>
+    <input id="s_herobutton" placeholder="SHOP NOW">
+  </div>
+
+  <div class="panel">
+    <h3>Featured Coffee / Best Sellers</h3>
+    <label>Section Title</label>
+    <input id="s_storetitle" placeholder="Featured Coffee">
+    <label>Section Description</label>
+    <textarea id="s_storedesc" style="width:100%;min-height:80px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Best Sellers Title</label>
+    <input id="s_besttitle" placeholder="Best Sellers">
+    <label>Best Sellers Description</label>
+    <textarea id="s_bestdesc" style="width:100%;min-height:80px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+  </div>
+
+  <div class="panel">
+    <h3>Collections</h3>
+    <label>Collections Heading</label>
+    <input id="s_collectiontitle" placeholder="Our Coffee Collection">
+    <label>Collections Description</label>
+    <input id="s_collectiondesc" placeholder="Choose your favourite style of coffee.">
+    <p style="font-size:12px;color:#76695d;margin-top:10px">To add, edit, remove or reorder the collection cards themselves, use the <b>Collections</b> tab above.</p>
+  </div>
+
+  <div class="panel">
+    <h3>About / Help</h3>
+    <label>About Heading</label>
+    <input id="s_abouttitle" placeholder="Need help choosing your coffee?">
+    <label>About Text</label>
+    <textarea id="s_abouttext" style="width:100%;min-height:100px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Help Button</label>
+    <input id="s_helpbutton" placeholder="Ask For Help">
+  </div>
+
+  <div class="panel">
+    <h3>Delivery & Returns</h3>
+    <label>Delivery Title</label>
+    <input id="s_deliverytitle" placeholder="Delivery">
+    <label>Delivery Text</label>
+    <textarea id="s_delivery" style="width:100%;min-height:90px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Returns Title</label>
+    <input id="s_returnstitle" placeholder="Returns">
+    <label>Returns Text</label>
+    <textarea id="s_returns" style="width:100%;min-height:90px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+  </div>
+
+  <div class="panel">
+    <h3>Contact & Footer</h3>
+    <label>Email</label>
+    <input id="s_email" placeholder="info@ambrosiacoffee.ae">
+    <label>WhatsApp <span style="font-weight:400;color:#8a7968">(used for footer text AND the floating WhatsApp chat button on the store — include full number with country code, e.g. 9715XXXXXXXX)</span></label>
+    <input id="s_whatsapp" placeholder="9715XXXXXXXX">
+    <label>UAE Contact Text</label>
+    <input id="s_uae" placeholder="UAE">
+    <label>Footer Brand</label>
+    <input id="s_footerbrand" placeholder="AMBROSIA SPECIALITY">
+    <label>Footer Description</label>
+    <textarea id="s_footerdesc" style="width:100%;min-height:80px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea>
+    <label>Copyright</label>
+    <input id="s_copyright" placeholder="© 2026 Ambrosia Coffee Beans. All Rights Reserved.">
+  </div>
+
+  <div class="panel">
+    <h3>Social Media</h3>
+    <p style="font-size:12px;color:#76695d">Paste the full page link for each platform you use. Leave blank to hide that icon on the store footer.</p>
+    <label>Facebook URL</label>
+    <input id="s_facebook" placeholder="https://facebook.com/ambrosiacoffee">
+    <label>Instagram URL</label>
+    <input id="s_instagram" placeholder="https://instagram.com/ambrosiacoffee">
+    <label>TikTok URL</label>
+    <input id="s_tiktok" placeholder="https://tiktok.com/@ambrosiacoffee">
+    <label>X (Twitter) URL</label>
+    <input id="s_twitter" placeholder="https://x.com/ambrosiacoffee">
+  </div>
+
+  <div class="panel full">
+    <div class="actions">
+      <button class="primary" onclick="saveContent(this)">Save All Store Content</button>
+      <button class="secondary" onclick="loadContent()">Reload Saved Content</button>
+      <button class="secondary" onclick="resetContent()">Reset Content</button>
+    </div>
+  </div>
+</section>
+
+<section id="messages" class="panel hidden">
+<h2>Customer Messages</h2>
+<p style="font-size:12px;color:#76695d;margin-top:-6px">Sent from the Contact form on the store.</p>
+<div id="messagesList"><p>Loading…</p></div>
+</section>
+
+<section id="activity" class="panel hidden">
+<h2>Activity Log</h2>
+<p style="font-size:12px;color:#76695d;margin-top:-6px">Every change made in this admin panel — who did it, when, and what changed. Entries can't be edited or deleted from here. Showing the latest 300.</p>
+<input id="activitySearch" placeholder="Search e.g. Guji, price, deleted, someone@email.com" oninput="renderActivity()">
+<div id="activityList" style="overflow-x:auto"><p>Loading…</p></div>
+</section>
+
+<section id="settings" class="panel hidden">
+<h2>Store Settings</h2>
+<p>Delivery charge is fixed at <b>AED 30.00</b> on the customer checkout.</p>
+</section>
+</main></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<div class="modal-scrim" id="customerDetailOverlay" onclick="if(event.target===this)closeCustomerDetail()">
+<div class="modal-box">
+<button class="modal-close-btn" onclick="closeCustomerDetail()">×</button>
+<h3>Customer Details</h3>
+<div id="customerDetailBody"></div>
+</div>
+</div>
+
+<div class="modal-scrim" id="invoiceOverlay" onclick="if(event.target===this)closeInvoice()">
+<div class="modal-box" id="invoicePrintArea" style="max-width:680px;padding:32px">
+<button class="modal-close-btn no-print" onclick="closeInvoice()">×</button>
+<div id="invoiceBody"></div>
+<div class="actions no-print" style="margin-top:18px"><button class="primary" onclick="printInvoice()">Print / Save PDF</button></div>
+</div>
+</div>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyALLukly05ilAdnwR66yLnIMq4wP8vt1jk",
+  authDomain:"ambrosiaweb.firebaseapp.com",
+  databaseURL:"https://ambrosiaweb-default-rtdb.firebaseio.com",
+  projectId:"ambrosiaweb"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db=firebase.database();
+
+// Admin sign-in uses Firebase Authentication (email + password). The account
+// must ALSO be listed under admins/{uid} = true in the database — the
+// database rules check that list, so a stranger can't change anything even
+// if they open this page.
+let adminUser=null,appOpened=false;
+
+const defaultSettings={
+topbar:"FRESHLY ROASTED COFFEE • UAE DELIVERY",home:"Home",shop:"Store",coffee:"Coffee Beans",collections:"Collections",best:"Best Sellers",aboutnav:"About Us",contactnav:"Contact",
+eyebrow:"SPECIALTY COFFEE, PERFECTLY ROASTED",herotitle:"Fresh Coffee Beans | Roasted With Passion",herodesc:"Discover premium single origin and signature blends, roasted to perfection and delivered fresh to your door.",herobutton:"SHOP NOW",
+storetitle:"Featured Coffee",storedesc:"Our most popular coffees, selected for everyday brewing.",besttitle:"Best Sellers",bestdesc:"Our customer favourites, roasted fresh and ready to enjoy.",
+collectiontitle:"Our Coffee Collection",collectiondesc:"Choose your favourite style of coffee.",
+abouttitle:"Need help choosing your coffee?",abouttext:"Tell us how you brew your coffee and what flavour you like. We can help you choose the right Ambrosia beans.",helpbutton:"Ask For Help",
+deliverytitle:"Delivery",delivery:"Fast delivery across the UAE. Delivery charges are AED 30.00.",returnstitle:"Returns",returns:"Please contact us if your order arrives damaged or incorrect. We will review the issue and assist you.",
+email:"info@ambrosiacoffee.ae",whatsapp:"+971",uae:"UAE",footerbrand:"AMBROSIA SPECIALITY",footerdesc:"Freshly roasted coffee beans for homes, cafés and coffee lovers across the UAE.",copyright:"© 2026 Ambrosia Coffee Beans. All Rights Reserved.",
+facebook:"",instagram:"",tiktok:"",twitter:""
+};
+
+let products=[];
+let collections=[];
+let productsLoaded=false,collectionsLoaded=false;
+// ---- Activity log: every admin change is recorded at auditLog/{pushId}
+// (who, when, what). The database rules make entries add-only, so a log line
+// can't be edited or deleted from this page.
+function logAction(action,detail){
+ if(!adminUser)return;
+ db.ref("auditLog").push({at:new Date().toISOString(),by:adminUser.email||adminUser.uid,uid:adminUser.uid,action,detail:String(detail||"").slice(0,3000)}).catch(e=>console.error("Activity log write failed:",e));
+}
+const money2=n=>Number(n||0).toFixed(2);
+function describeProductChanges(a,b){
+ if(!a)return "";
+ let out=[];
+ if(a.name!==b.name)out.push(`name "${a.name}" → "${b.name}"`);
+ if((a.cat||"")!==(b.cat||""))out.push(`collection "${a.cat||"-"}" → "${b.cat||"-"}"`);
+ if((a.badge||"")!==(b.badge||""))out.push(`badge "${a.badge||"-"}" → "${b.badge||"-"}"`);
+ SIZE_KEYS.forEach(([k,label])=>{
+  let x=(a.sizes||{})[k]||{},y=(b.sizes||{})[k]||{};
+  if((x.enabled!==false)!==(y.enabled!==false))out.push(`${label} ${y.enabled!==false?"enabled":"disabled"}`);
+  if(Number(x.price||0)!==Number(y.price||0))out.push(`${label} price ${money2(x.price)} → ${money2(y.price)}`);
+  if(Number(x.old||0)!==Number(y.old||0))out.push(`${label} old price ${money2(x.old)} → ${money2(y.old)}`);
+ });
+ if([a.img,...(a.gallery||[])].join("|")!==[b.img,...(b.gallery||[])].join("|"))out.push("images changed");
+ ["description","tastingNotes","brewingGuide","tastingShort","origin"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push(f+" changed")});
+ if(Number(a.rating||5)!==Number(b.rating||5))out.push(`rating ${a.rating||5} → ${b.rating||5}`);
+ if(Number(a.reviewCount||0)!==Number(b.reviewCount||0))out.push(`review count ${a.reviewCount||0} → ${b.reviewCount||0}`);
+ return out.join("; ");
+}
+// Small confirmation message at the bottom of the screen after every save.
+let toastTimer=null;
+function toast(msg,type="ok"){
+ let t=document.getElementById("toast");if(!t)return;
+ t.textContent=msg;t.className="toast "+type+" show";
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),type==="err"?4500:2400);
+}
+// Disables a button and shows "Saving…" while a save runs, so it can't be
+// double-clicked (which used to create duplicate products).
+async function busy(btn,label,fn){
+ if(btn&&btn.disabled)return;
+ let old=btn?btn.textContent:"";
+ if(btn){btn.disabled=true;btn.textContent=label||"Saving…";}
+ try{return await fn();}finally{if(btn){btn.disabled=false;if(btn.textContent===(label||"Saving…"))btn.textContent=old;}}
+}
+// Stock lives in its own node — stock/{productId}/{g200|g250|kg1} = number
+// of packs on hand — instead of inside the products array. The store takes
+// packs off on every order, and keeping it separate means saving/reordering
+// products here can never overwrite those deductions.
+// No entry for a size = unlimited / not tracked.
+let stockData={};
+const LOW_STOCK_PACKS=3;
+const SIZE_KEYS=[["g200","200g","size200"],["g250","250g","size250"],["kg1","1 Kg","size1kg"]];
+function stockOf(id,key){let v=stockData[String(id)];if(!v||typeof v!=="object")return null;v=v[key];return (v===undefined||v===null||v==="")?null:Math.max(0,Math.floor(Number(v)||0))}
+function stockBadge(p){
+ let sz=p.sizes||{};
+ return SIZE_KEYS.filter(([k])=>!(sz[k]&&sz[k].enabled===false)&&Number(sz[k]?.price)>0).map(([k,label])=>{
+  let v=stockOf(p.id,k);
+  if(v===null)return `<span class="badge" style="white-space:nowrap;background:#eee4d7;color:#76695d">${label}: unlimited</span>`;
+  if(v<=0)return `<span class="badge" style="white-space:nowrap;background:#8d3e32;color:#fff">${label}: out of stock</span>`;
+  if(v<=LOW_STOCK_PACKS)return `<span class="badge" style="white-space:nowrap;background:#f3d9a4;color:#7a4a12">${label}: ${v} left</span>`;
+  return `<span class="badge" style="white-space:nowrap;background:#dcebd6;color:#2f5a2a">${label}: ${v}</span>`;
+ }).join("");
+}
+async function addStock(id){
+ let p=products.find(x=>String(x.id)===String(id));if(!p)return;
+ let sz=p.sizes||{},changed=0;
+ for(const [k,label] of SIZE_KEYS){
+  if((sz[k]&&sz[k].enabled===false)||!(Number(sz[k]?.price)>0))continue;
+  let cur=stockOf(id,k);
+  let ans=prompt(`"${p.name}" — ${label}\nCurrent stock: ${cur===null?"unlimited (not tracked)":cur+" packs"}\n\nHow many ${label} packs to ADD? (minus to remove, blank = skip)`,"");
+  if(ans===null)return;
+  if(ans.trim()==="")continue;
+  let n=Math.round(Number(ans));if(!isFinite(n)){alert("Please enter a whole number.");return}
+  try{let r=await db.ref(`stock/${id}/${k}`).transaction(c=>Math.max(0,(Math.floor(Number(c))||0)+n));changed++;logAction("Stock added",`${p.name} ${label}: ${n>=0?"+":""}${n} (${cur===null?"unlimited":cur} → ${r.snapshot.val()})`);}catch(e){toast("Stock update failed: "+e.message,"err");return}
+ }
+ if(changed)toast(`✓ Stock updated for ${p.name}`);
+}
+window.addStock=addStock;
+
+// Lets the admin pick a photo from their phone/computer instead of pasting a
+// URL. The file is resized/compressed client-side and stored as a data URL
+// in the same text field the URL inputs already use — so saveProduct() /
+// saveCollection() need no changes at all.
+function handleImageUpload(fileInput,targetId){
+ let file=fileInput.files&&fileInput.files[0];
+ if(!file)return;
+ if(!file.type.startsWith("image/")){alert("Please choose an image file.");fileInput.value="";return;}
+ let reader=new FileReader();
+ reader.onload=e=>{
+  let img=new Image();
+  img.onload=()=>{
+   // Images are stored as base64 text directly inside the Realtime Database
+   // record (Firebase Storage now requires the paid Blaze plan). Keeping
+   // dimensions and quality modest here matters a lot: it's the only lever
+   // we have to keep the database small and pages fast on the free plan.
+   let maxDim=950,w=img.width,h=img.height;
+   if(w>maxDim&&w>=h){h=Math.round(h*maxDim/w);w=maxDim;}
+   else if(h>maxDim&&h>w){w=Math.round(w*maxDim/h);h=maxDim;}
+   let canvas=document.createElement("canvas");
+   canvas.width=w;canvas.height=h;
+   canvas.getContext("2d").drawImage(img,0,0,w,h);
+   let dataUrl=canvas.toDataURL("image/jpeg",.8);
+   document.getElementById(targetId).value=dataUrl;
+   setImgPreview(targetId,dataUrl);
+   let kb=Math.round(dataUrl.length*0.75/1024);
+   if(kb>180){alert(`This image compressed to ~${kb}KB, which is on the larger side for the database. It will still work, but for a lot of products consider pasting a hosted image URL instead of uploading.`);}
+  };
+  img.onerror=()=>alert("Could not read that image file.");
+  img.src=e.target.result;
+ };
+ reader.onerror=()=>alert("Could not read that file.");
+ reader.readAsDataURL(file);
+ fileInput.value=""; // allow re-selecting the same file again later
+}
+function setImgPreview(targetId,src){
+ let p=document.getElementById(targetId+"_preview");
+ if(!p)return;
+ if(src){p.src=src;p.classList.add("show");}
+ else{p.src="";p.classList.remove("show");}
+}
+
+function login(btn){
+ let email=document.getElementById("email").value.trim(),pass=document.getElementById("pass").value,err=document.getElementById("err");
+ err.textContent="";
+ if(!email||!pass){err.textContent="Enter your admin email and password.";return}
+ busy(btn,"Signing in…",()=>firebase.auth().signInWithEmailAndPassword(email,pass).catch(e=>{
+  let c=e.code||"";
+  err.textContent=(c.includes("invalid")||c.includes("wrong-password")||c.includes("user-not-found"))?"Incorrect email or password."
+   :c.includes("too-many-requests")?"Too many attempts. Please wait a few minutes and try again."
+   :c.includes("operation-not-allowed")?"Email/Password sign-in is not enabled in Firebase → Authentication → Sign-in method."
+   :"Sign-in failed: "+e.message;
+ }));
+}
+async function onAdminAuth(u){
+ let err=document.getElementById("err");
+ if(!u||u.isAnonymous){adminUser=null;document.getElementById("login").style.display="";document.getElementById("app").style.display="none";return}
+ let ok=false;
+ try{ok=(await db.ref("admins/"+u.uid).once("value")).val()===true;}catch(e){ok=false}
+ if(!ok){
+  err.innerHTML=`Signed in as <b>${esc(u.email||"")}</b>, but this account is not an admin yet.<br>In Firebase → Realtime Database, add <code>admins</code> → <code>${esc(u.uid)}</code> = <code>true</code>, then sign in again.`;
+  await firebase.auth().signOut();return;
+ }
+ adminUser=u;document.getElementById("adminWho").textContent=u.email||"";
+ openApp();
+}
+function openApp(){if(appOpened)return;appOpened=true;document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";renderProducts();renderCollections();renderOrders();renderCustomers();loadContent();subscribeFirebase();}
+function logout(){firebase.auth().signOut().then(()=>location.reload());}
+
+function subscribeFirebase(){
+ db.ref("products").on("value",s=>{productsLoaded=true;let v=s.val();products=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderProducts();});
+ db.ref("collections").on("value",s=>{collectionsLoaded=true;let v=s.val();collections=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderCollections();});
+ db.ref("orders").on("value",s=>{ordersRaw=s.val()||{};renderOrders();renderCustomers();});
+ db.ref("stock").on("value",s=>{stockData=s.val()||{};renderProducts();});
+ db.ref("messages").on("value",s=>{messagesRaw=s.val()||{};renderMessages();},e=>console.error(e));
+ db.ref("auditLog").limitToLast(300).on("value",s=>{activityRaw=s.val()||{};renderActivity();},e=>{document.getElementById("activityList").innerHTML=`<p style="color:#9a4435">Couldn't load the activity log: ${esc(e.message)}</p>`});
+ db.ref("stockReturns").on("value",s=>{stockReturnsRaw=s.val()||{};renderStockReturns();},e=>console.error(e));
+ db.ref("settings").on("value",s=>{lastSettings={...defaultSettings,...(s.val()||{})};if(s.val()){let x=s.val();Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]??defaultSettings[k]));}});
+}
+// Saving writes the WHOLE list, so doing it before the list has loaded would
+// replace every product with just the one being saved. Block that.
+async function saveProducts(){if(!productsLoaded)throw new Error("products are still loading — wait a moment and try again");await db.ref("products").set(products);}
+function getSizeForm(){return {
+g200:{enabled:document.getElementById("size200_enabled").checked,price:+document.getElementById("size200_price").value||0,old:+document.getElementById("size200_old").value||0},
+g250:{enabled:document.getElementById("size250_enabled").checked,price:+document.getElementById("size250_price").value||0,old:+document.getElementById("size250_old").value||0},
+kg1:{enabled:document.getElementById("size1kg_enabled").checked,price:+document.getElementById("size1kg_price").value||0,old:+document.getElementById("size1kg_old").value||0}}}
+async function saveProduct(btn){return busy(btn,"Saving…",()=>saveProductInner());}
+async function saveProductInner(){
+ let id=document.getElementById("pid").value||Date.now(),sizes=getSizeForm();
+ let enabled=Object.values(sizes).filter(x=>x.enabled&&x.price>0),basePrice=enabled.length?enabled[0].price:0,baseOld=enabled.length?(enabled[0].old||0):0;
+ let imgs=["pimg1","pimg2","pimg3"].map(k=>document.getElementById(k).value.trim()).filter(Boolean);
+ let p={id:String(id),name:document.getElementById("pname").value.trim(),price:basePrice,old:baseOld,img:imgs[0]||"",gallery:imgs.slice(1),badge:document.getElementById("pbadge").value.trim(),cat:document.getElementById("pcat").value,sizes,
+rating:+document.getElementById("prating").value||5,reviewCount:+document.getElementById("previewcount").value||0,tastingShort:document.getElementById("ptasting").value.trim(),description:document.getElementById("pdescription").value.trim(),tastingNotes:document.getElementById("ptastingnotes").value.trim(),brewingGuide:document.getElementById("pbrewing").value.trim(),origin:document.getElementById("porigin").value.trim()};
+ if(!p.name||!basePrice)return alert("Product name and at least one enabled pack size price are required.");
+ let i=products.findIndex(x=>String(x.id)===String(id));let before=i>=0?JSON.parse(JSON.stringify(products[i])):null;if(i>=0)products[i]=p;else products.push(p);
+ try{
+  await saveProducts();
+  let stockNotes=[];
+  // Only write sizes the admin actually changed, so an order that came in
+  // while this form was open isn't overwritten.
+  let cur=stockData[String(p.id)];if(cur!==undefined&&(cur===null||typeof cur!=="object"))await db.ref("stock/"+p.id).remove();
+  for(const [k,,pre] of SIZE_KEYS){
+   let el=document.getElementById(pre+"_stock"),raw=el.value.trim();
+   if(raw===(el.dataset.loaded||""))continue;
+   let label=(SIZE_KEYS.find(x=>x[0]===k)||[,k])[1];
+   if(raw==="")await db.ref(`stock/${p.id}/${k}`).remove();
+   else await db.ref(`stock/${p.id}/${k}`).set(Math.max(0,Math.floor(Number(raw)||0)));
+   stockNotes.push(`${label} stock ${el.dataset.loaded||"unlimited"} → ${raw===""?"unlimited":Math.max(0,Math.floor(Number(raw)||0))}`);
+  }
+  let changes=[describeProductChanges(before,p),stockNotes.join("; ")].filter(Boolean).join("; ");
+  if(before)logAction("Product updated",`${p.name}${changes?": "+changes:" (no changes)"}`);
+  else logAction("Product added",`${p.name} — ${SIZE_KEYS.filter(([k])=>p.sizes[k].enabled&&p.sizes[k].price>0).map(([k,l])=>l+" AED "+money2(p.sizes[k].price)).join(", ")}${stockNotes.length?"; "+stockNotes.join("; "):""}`);
+  let wasEdit=!!document.getElementById("pid").value;
+  clearForm();renderProducts();
+  toast(wasEdit?`✓ "${p.name}" updated`:`✓ "${p.name}" added to the store`);
+ }catch(e){toast("Save failed: "+e.message,"err");}
+}
+function edit(id){
+ let p=products.find(x=>String(x.id)===String(id));if(!p)return;
+ ["pid","pname","pbadge"].forEach((k,i)=>document.getElementById(k).value=[p.id,p.name,p.badge][i]??"");
+ let allImgs=[p.img,...(p.gallery||[])].filter(Boolean);
+ document.getElementById("pimg1").value=allImgs[0]||"";
+ document.getElementById("pimg2").value=allImgs[1]||"";
+ document.getElementById("pimg3").value=allImgs[2]||"";
+ setImgPreview("pimg1",allImgs[0]);
+ setImgPreview("pimg2",allImgs[1]);
+ setImgPreview("pimg3",allImgs[2]);
+ let catSel=document.getElementById("pcat");
+ if(p.cat&&![...catSel.options].some(o=>o.value===p.cat))catSel.insertAdjacentHTML("beforeend",`<option value="${esc(p.cat)}">${esc(p.cat)} (no collection)</option>`);
+ catSel.value=p.cat||catSel.value;
+ SIZE_KEYS.forEach(([k,,pre])=>{let v=stockOf(p.id,k),el=document.getElementById(pre+"_stock");el.value=v===null?"":v;el.dataset.loaded=el.value;});
+document.getElementById("prating").value=p.rating??5;document.getElementById("previewcount").value=p.reviewCount??p.reviews??0;document.getElementById("ptasting").value=p.tastingShort||p.shortDescription||"";document.getElementById("pdescription").value=p.description||"";document.getElementById("ptastingnotes").value=p.tastingNotes||"";document.getElementById("pbrewing").value=p.brewingGuide||"";document.getElementById("porigin").value=p.origin||"";let s=p.sizes||{};
+ [["g200","size200"],["g250","size250"],["kg1","size1kg"]].forEach(([k,pre])=>{let x=s[k]||{};document.getElementById(pre+"_enabled").checked=x.enabled!==false;document.getElementById(pre+"_price").value=x.price||"";document.getElementById(pre+"_old").value=x.old||""});
+ let n=document.getElementById("editingNote");n.innerHTML=`Editing <b>${esc(p.name)}</b> — press <b>Update Product</b> to save, or <b>Clear</b> to cancel.`;n.classList.add("show");
+ document.getElementById("saveProductBtn").textContent="Update Product";
+ document.getElementById("pname").closest(".panel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+async function del(id){
+ let p=products.find(x=>String(x.id)===String(id));
+ if(!confirm(`Delete "${p?p.name:"this product"}"?`))return;
+ products=products.filter(p=>String(p.id)!==String(id));
+ if(String(document.getElementById("pid").value)===String(id))clearForm();
+ try{await saveProducts();await db.ref("stock/"+id).remove();logAction("Product deleted",p?p.name:id);toast("✓ Product deleted");}catch(e){toast("Delete failed: "+e.message,"err");}
+}
+function renderProducts(){document.getElementById("productsList").innerHTML=products.map((p,idx)=>`<div class="product-row"><img src="${esc(p.img)}" onerror="this.style.opacity=.25"><div><b>${esc(p.name)}</b><br><span class="badge">${esc(p.badge||p.cat)}</span> <b>AED ${Number(p.price||0).toFixed(2)}</b><div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px">${stockBadge(p)}</div></div><div class="actions"><button class="secondary" onclick="addStock('${String(p.id).replace(/'/g,"\'")}')">+ Stock</button><button class="secondary" ${idx===0?"disabled":""} onclick="moveProduct('${String(p.id).replace(/'/g,"\'")}',-1)">↑</button><button class="secondary" ${idx===products.length-1?"disabled":""} onclick="moveProduct('${String(p.id).replace(/'/g,"\'")}',1)">↓</button><button class="secondary" onclick="edit('${String(p.id).replace(/'/g,"\'")}')">Edit</button><button class="danger" onclick="del('${String(p.id).replace(/'/g,"\'")}')">Delete</button></div></div>`).join("");}
+async function moveProduct(id,dir){
+ let i=products.findIndex(x=>String(x.id)===String(id));if(i<0)return;
+ let j=i+dir;if(j<0||j>=products.length)return;
+ [products[i],products[j]]=[products[j],products[i]];
+ renderProducts();
+ try{await saveProducts();logAction("Products reordered",`${products[j].name} moved ${dir<0?"up":"down"}`);toast("✓ Product order saved");}catch(e){toast("Save failed: "+e.message,"err");}
+}
+function clearForm(){["pid","pname","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin"].forEach(x=>document.getElementById(x).value="");["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);["pimg1","pimg2","pimg3"].forEach(x=>setImgPreview(x,""));SIZE_KEYS.forEach(([,,pre])=>{let el=document.getElementById(pre+"_stock");el.value="";el.dataset.loaded="";});document.getElementById("editingNote").classList.remove("show");document.getElementById("saveProductBtn").textContent="Save Product";}
+
+async function saveCollections(){if(!collectionsLoaded)throw new Error("collections are still loading — wait a moment and try again");await db.ref("collections").set(collections);}
+async function saveCollection(btn){return busy(btn,"Saving…",async()=>{
+ let id=document.getElementById("colid").value||("col"+Date.now());
+ let c={id:String(id),name:document.getElementById("colname").value.trim(),img:document.getElementById("colimg").value.trim(),link:document.getElementById("collink").value.trim()||"#store"};
+ if(!c.name||!c.img)return alert("Collection name and image are required.");
+ let i=collections.findIndex(x=>String(x.id)===String(id));
+ let oldName=i>=0?collections[i].name:null;
+ if(i>=0)collections[i]=c;else collections.push(c);
+ try{
+  await saveCollections();
+  // Products point to their collection by name, so a rename has to move
+  // them too — otherwise they silently drop out of that collection.
+  let moved=0;
+  if(oldName&&oldName!==c.name){products.forEach(p=>{if(p.cat===oldName){p.cat=c.name;moved++;}});if(moved)await saveProducts();}
+  let wasEdit=!!document.getElementById("colid").value;
+  logAction(wasEdit?"Collection updated":"Collection added",wasEdit&&oldName!==c.name?`"${oldName}" renamed to "${c.name}"${moved?` (${moved} products moved)`:""}`:c.name);
+  clearCollectionForm();renderCollections();
+  toast(wasEdit?`✓ Collection updated${moved?` (${moved} product${moved>1?"s":""} moved to the new name)`:""}`:"✓ Collection added");
+ }catch(e){toast("Save failed: "+e.message,"err");}
+});}
+function editCollection(id){
+ let c=collections.find(x=>String(x.id)===String(id));if(!c)return;
+ let n=document.getElementById("colEditingNote");n.innerHTML=`Editing <b>${esc(c.name)}</b> — press <b>Save Collection</b> to save, or <b>Clear</b> to cancel.`;n.classList.add("show");
+ document.getElementById("colname").closest(".panel").scrollIntoView({behavior:"smooth",block:"start"});
+ document.getElementById("colid").value=c.id;
+ document.getElementById("colname").value=c.name;
+ document.getElementById("colimg").value=c.img;
+ document.getElementById("collink").value=c.link||"";
+ setImgPreview("colimg",c.img);
+}
+async function delCollection(id){
+ let c=collections.find(x=>String(x.id)===String(id));
+ let inUse=c?products.filter(p=>p.cat===c.name).length:0;
+ if(!confirm(`Delete the "${c?c.name:""}" collection?`+(inUse?`\n\n${inUse} product${inUse>1?"s are":" is"} still in it. They stay on the store, but won't appear under any collection until you edit them and pick a new one.`:"")))return;
+ collections=collections.filter(c=>String(c.id)!==String(id));
+ if(String(document.getElementById("colid").value)===String(id))clearCollectionForm();
+ try{await saveCollections();renderCollections();logAction("Collection deleted",`${c?c.name:id}${inUse?` (${inUse} products were in it)`:""}`);toast("✓ Collection deleted");}catch(e){toast("Delete failed: "+e.message,"err");}
+}
+function clearCollectionForm(){["colid","colname","colimg","collink"].forEach(x=>document.getElementById(x).value="");setImgPreview("colimg","");document.getElementById("colEditingNote").classList.remove("show");}
+async function moveCollection(id,dir){
+ let i=collections.findIndex(x=>String(x.id)===String(id));if(i<0)return;
+ let j=i+dir;if(j<0||j>=collections.length)return;
+ [collections[i],collections[j]]=[collections[j],collections[i]];
+ renderCollections();
+ try{await saveCollections();logAction("Collections reordered",`${collections[j].name} moved ${dir<0?"up":"down"}`);toast("✓ Collection order saved");}catch(e){toast("Save failed: "+e.message,"err");}
+}
+function renderCategoryOptions(){
+ let sel=document.getElementById("pcat");if(!sel)return;
+ let current=sel.value;
+ let names=collections.map(c=>c.name).filter(Boolean);
+ if(!names.length)names=["Single Origin","Signature Blends","Espresso Coffee"];
+ sel.innerHTML=names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("");
+ if(names.includes(current))sel.value=current;
+}
+function renderCollections(){
+ let box=document.getElementById("collectionsList");if(!box)return;
+ box.innerHTML=collections.length?collections.map((c,idx)=>`<div class="product-row"><img src="${esc(c.img)}" onerror="this.style.opacity=.25"><div><b>${esc(c.name)}</b><br><span class="badge">${esc(c.link||"#store")}</span></div><div class="actions"><button class="secondary" ${idx===0?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',-1)">↑</button><button class="secondary" ${idx===collections.length-1?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',1)">↓</button><button class="secondary" onclick="editCollection('${String(c.id).replace(/'/g,"\'")}')">Edit</button><button class="danger" onclick="delCollection('${String(c.id).replace(/'/g,"\'")}')">Delete</button></div></div>`).join(""):"<p>No collections yet.</p>";
+ renderCategoryOptions();
+}
+
+let lastSettings={};
+let ordersData=[];
+let ordersRaw=null; // filled by the live "orders" listener
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+const ORDER_STATUSES=["New","Confirmed","Out for delivery","Delivered","Cancelled"];
+const LABEL_TO_KEY={"200g":"g200","250g":"g250","1 Kg":"kg1"};
+// Orders are written by the shopper's browser, so the prices in them can't
+// be fully trusted. Flag anything that doesn't add up, or that doesn't match
+// the product's current price, so it gets a second look before delivery.
+function orderPriceIssues(o){
+ let items=Array.isArray(o.items)?o.items:[],issues=[];
+ let sub=items.reduce((a,it)=>a+Number(it.price||0)*Number(it.qty||0),0);
+ if(Math.abs(sub-Number(o.subtotal||0))>0.01)issues.push("items don't add up to the subtotal");
+ if(Math.abs(Number(o.subtotal||0)+Number(o.deliveryCharge||0)-Number(o.total||0))>0.01)issues.push("total doesn't match subtotal + delivery");
+ if(Number(o.deliveryCharge)!==30)issues.push("delivery charge is not AED 30");
+ items.forEach(it=>{
+  if(!(Number(it.qty)>=1)||Number(it.qty)%1)issues.push(`${it.name}: odd quantity`);
+  let p=products.find(x=>String(x.id)===String(it.id));if(!p)return;
+  let key=it.sizeKey||LABEL_TO_KEY[it.size]||"kg1",sz=(p.sizes||{})[key];
+  let cur=sz?Number(sz.price):Number(p.price);
+  if(cur&&Math.abs(cur-Number(it.price||0))>0.01)issues.push(`${it.name} ${it.size||""}: charged AED ${money2(it.price)}, current price AED ${money2(cur)}`);
+ });
+ return issues;
+}
+async function setOrderStatus(key,status){
+ let o=ordersData.find(x=>String(x.key)===String(key));if(!o)return;
+ let prev=o.status||"New";if(prev===status)return;
+ try{
+  await db.ref(`orders/${key}/status`).set(status);
+  let note="";
+  if(status==="Cancelled"&&o.stockDeducted&&!o.stockReturned){
+   let back=orderStockBack(o);
+   if(back.length&&confirm("Order cancelled. Return its coffee to stock?\n\n"+stockBackLines(back))){await applyStockBack(back);await db.ref(`orders/${key}/stockReturned`).set(true);note=" — stock returned";}
+  }
+  logAction("Order status changed",`${o.orderNo||key} (${o.customer?.fullname||"-"}): ${prev} → ${status}${note}`);
+  toast(`✓ ${o.orderNo||"Order"} marked ${status}${note}`);
+ }catch(e){toast("Status update failed: "+e.message,"err");renderOrders();}
+}
+window.setOrderStatus=setOrderStatus;
+function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x);return `<tr><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
+function orderStockBack(o){
+ let back=[];
+ if(o&&o.stockDeducted&&o.stockTaken&&typeof o.stockTaken==="object"){
+  Object.entries(o.stockTaken).forEach(([id,m])=>{if(!m||typeof m!=="object")return;Object.entries(m).forEach(([k,n])=>{n=Math.floor(Number(n)||0);if(n>0&&stockOf(id,k)!==null)back.push([id,k,n]);});});
+ }
+ return back;
+}
+function stockBackLines(back){return back.map(([id,k,n])=>`• ${(products.find(p=>String(p.id)===String(id))||{}).name||id} ${(SIZE_KEYS.find(x=>x[0]===k)||[,k])[1]} × ${n}`).join("\n")}
+async function applyStockBack(back){for(let [id,k,n] of back){await db.ref(`stock/${id}/${k}`).transaction(c=>(c===null?null:(Math.floor(Number(c))||0)+n));}}
+async function delOrder(key){
+ if(!confirm("Delete this order? This cannot be undone."))return;
+ let o=ordersData.find(x=>String(x.key)===String(key));
+ // Orders placed after stock tracking was added record how many packs of
+ // each size they took. Offer to put them back (e.g. cancelled / fake order).
+ let back=o&&!o.stockReturned?orderStockBack(o):[];
+ let restock=false;
+ if(back.length){
+  restock=confirm("Return this order's coffee to stock?\n\n"+stockBackLines(back)+"\n\nOK = return to stock   ·   Cancel = delete without returning");
+ }
+ try{
+  if(restock)await applyStockBack(back);
+  await db.ref("orders/"+key).remove();
+  logAction("Order deleted",`${o?.orderNo||key} — ${o?.customer?.fullname||"-"}, AED ${money2(o?.total)}${restock?" — stock returned: "+stockBackLines(back).replace(/• /g,"").replace(/\n/g,", "):""}`);
+  toast(restock?"✓ Order deleted and stock returned":"✓ Order deleted");
+ }catch(e){toast("Delete failed: "+e.message,"err");}
+}
+window.delOrder=delOrder;
+let customersData=[];
+function renderCustomers(){
+ if(ordersRaw===null){let b=document.getElementById("customersList");if(b)b.innerHTML="<p>Loading customers…</p>";return}
+ {
+  let raw=ordersRaw;
+  let map={};
+  Object.entries(raw).forEach(([key,x])=>{
+   let c=x.customer||{};
+   let phoneKey=(c.phone||"").trim()||("email:"+(c.email||"unknown-"+key));
+   if(!map[phoneKey])map[phoneKey]={name:c.fullname||c.name||"Customer",phone:c.phone||"-",email:c.email||"-",city:c.city||"",emirate:c.emirate||"",orders:[],total:0,lastCreated:""};
+   let m=map[phoneKey];
+   m.orders.push({key,orderNo:x.orderNo||key,total:Number(x.total||0),status:x.status||"New",created:x.created||"",items:x.items||[]});
+   m.total+=Number(x.total||0);
+   if(x.created&&x.created>m.lastCreated){m.lastCreated=x.created;m.name=c.fullname||c.name||m.name;m.email=c.email||m.email;m.city=c.city||m.city;m.emirate=c.emirate||m.emirate;}
+  });
+  customersData=Object.values(map).sort((a,b)=>(b.lastCreated||"").localeCompare(a.lastCreated||""));
+  let box=document.getElementById("customersList");if(!box)return;
+  box.innerHTML=customersData.length?`<table><tr><th>Customer</th><th>Phone</th><th>Orders</th><th>Total Spent</th><th>Last Order</th><th></th></tr>${customersData.map((c,i)=>`<tr><td>${esc(c.name)}</td><td>${esc(c.phone)}</td><td>${c.orders.length}</td><td>AED ${c.total.toFixed(2)}</td><td>${c.lastCreated?new Date(c.lastCreated).toLocaleDateString():"-"}</td><td><button class="secondary" onclick="viewCustomer(${i})">View</button></td></tr>`).join("")}</table>`:"<p>No customers yet — they'll appear here automatically once orders come in.</p>";
+ }
+}
+function viewCustomer(i){
+ let c=customersData[i];if(!c)return;
+ document.getElementById("customerDetailBody").innerHTML=`<p><b>${esc(c.name)}</b><br>${esc(c.phone)}${c.email&&c.email!=="-"?" · "+esc(c.email):""}<br>${esc([c.city,c.emirate].filter(Boolean).join(", "))}</p><h4 style="margin:18px 0 8px">Order History (${c.orders.length})</h4>${c.orders.slice().reverse().map(o=>`<div class="product-row" style="grid-template-columns:1fr auto"><div><b>${esc(o.orderNo)}</b><br><span class="badge">${esc(o.status)}</span> ${o.created?"· "+new Date(o.created).toLocaleString():""}</div><div><b>AED ${o.total.toFixed(2)}</b></div></div>`).join("")}`;
+ document.getElementById("customerDetailOverlay").classList.add("open");
+}
+function closeCustomerDetail(){document.getElementById("customerDetailOverlay").classList.remove("open");}
+
+function viewInvoice(i){
+ let o=ordersData[i];if(!o)return;
+ let c=o.customer||{};
+ let items=Array.isArray(o.items)?o.items:[];
+ let dateStr=o.created?new Date(o.created).toLocaleString(undefined,{year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"2-digit",second:"2-digit"}):"-";
+ let rows=items.map(it=>`<tr>
+   <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9">${esc(it.name)}${it.size?` (${esc(it.size)})`:""}</td>
+   <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9;text-align:center">${Number(it.qty||0)}</td>
+   <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9;text-align:right">AED ${Number(it.price||0).toFixed(2)}</td>
+   <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9;text-align:right">AED ${(Number(it.price||0)*Number(it.qty||0)).toFixed(2)}</td>
+  </tr>`).join("");
+ let iss=orderPriceIssues(o);
+ document.getElementById("invoiceBody").innerHTML=(iss.length?`<div class="no-print" style="background:#f3d9a4;color:#7a4a12;border-radius:12px;padding:10px 14px;margin:0 40px 14px 0;font-size:13px"><b>⚠ Please check this order's prices:</b><br>${iss.map(esc).join("<br>")}</div>`:"")+`
+  <div style="font-family:Arial,Helvetica,sans-serif;color:#2b2119">
+   <div style="display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px">
+    <div>
+     <div style="display:flex;align-items:center;gap:10px">
+      <img src="ambrosia_logo.webp" style="width:44px;height:44px;object-fit:contain" onerror="this.style.display='none'">
+      <div><div style="font-family:Georgia,serif;font-size:24px;font-weight:700;color:#3d3026;line-height:1">AMBROSIA</div>
+      <div style="font-size:10px;letter-spacing:2px;color:#8a7968;text-transform:uppercase;margin-top:2px">Speciality Coffee</div></div>
+     </div>
+     <div style="font-size:12px;color:#8a7968;margin-top:8px">ambrosiacoffee.store &nbsp;·&nbsp; +971 56 811 5042</div>
+    </div>
+    <div style="text-align:right">
+     <div style="font-size:24px;font-weight:700;color:#a96d2e;letter-spacing:1px">INVOICE</div>
+     <div style="font-size:12px;color:#76695d;margin-top:4px">Order #${esc(o.orderNo||o.key)}</div>
+     <div style="font-size:12px;color:#76695d">${esc(dateStr)}</div>
+     <div style="font-size:12px;color:#a96d2e;font-weight:600;margin-top:2px">${esc(o.status||"New")}</div>
+    </div>
+   </div>
+   <div style="border-top:3px solid #2b2119;margin-bottom:20px"></div>
+
+   <div style="display:flex;gap:16px;margin-bottom:24px">
+    <div style="flex:1;border:1px solid #e4d0ad;border-radius:8px;padding:14px 16px">
+     <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#a96d2e;font-weight:700;margin-bottom:6px">Bill To</div>
+     <div style="font-size:13px;line-height:1.7">
+      <b>${esc(c.fullname||c.name||"-")}</b><br>
+      ${esc(c.phone||"")}<br>
+      ${esc(c.address||"")}${c.address?", ":""}${esc([c.city,c.emirate].filter(Boolean).join(", "))}
+     </div>
+    </div>
+    <div style="flex:1;border:1px solid #e4d0ad;border-radius:8px;padding:14px 16px">
+     <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#a96d2e;font-weight:700;margin-bottom:6px;text-align:right">Payment</div>
+     <div style="font-size:13px;text-align:right">Cash on Delivery</div>
+    </div>
+   </div>
+
+   <table style="width:100%;border-collapse:collapse;font-size:13px">
+    <tr>
+     <th style="padding:0 8px 8px;text-align:left;color:#8a7968;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2b2119;font-weight:600">Item</th>
+     <th style="padding:0 8px 8px;text-align:center;color:#8a7968;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2b2119;font-weight:600">Qty</th>
+     <th style="padding:0 8px 8px;text-align:right;color:#8a7968;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2b2119;font-weight:600">Unit Price</th>
+     <th style="padding:0 8px 8px;text-align:right;color:#8a7968;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid #2b2119;font-weight:600">Amount</th>
+    </tr>
+    ${rows}
+   </table>
+
+   <div style="display:flex;justify-content:flex-end;margin-top:20px">
+    <table style="font-size:13px;width:280px;border:1px solid #e4d0ad;border-radius:8px;padding:14px 16px;border-spacing:0">
+     <tr><td style="padding:4px 0;color:#76695d">Subtotal</td><td style="padding:4px 0;text-align:right">AED ${Number(o.subtotal||0).toFixed(2)}</td></tr>
+     <tr><td style="padding:4px 0;color:#76695d">Delivery</td><td style="padding:4px 0;text-align:right">AED ${Number(o.deliveryCharge||0).toFixed(2)}</td></tr>
+     <tr><td style="padding:10px 0 0;border-top:2px solid #2b2119;font-size:16px;font-weight:700">Total</td><td style="padding:10px 0 0;border-top:2px solid #2b2119;text-align:right;font-size:16px;font-weight:700">AED ${Number(o.total||0).toFixed(2)}</td></tr>
+    </table>
+   </div>
+
+   <div style="margin-top:36px;padding-top:14px;border-top:1px solid #ecdfc9;text-align:center">
+    <p style="font-size:14px;color:#2b2119;margin:0 0 4px;font-family:Georgia,serif">Thank you for your order!</p>
+    <p style="font-size:12px;color:#8a7968;margin:0">ambrosiacoffee.store &nbsp;·&nbsp; +971 56 811 5042</p>
+   </div>
+  </div>`;
+ document.getElementById("invoiceOverlay").classList.add("open");
+}
+function closeInvoice(){document.getElementById("invoiceOverlay").classList.remove("open")}
+function printInvoice(){window.print()}
+window.viewInvoice=viewInvoice;window.closeInvoice=closeInvoice;window.printInvoice=printInvoice;
+// ---- Messages (contact form) ----
+let messagesRaw=null;
+function renderMessages(){
+ let box=document.getElementById("messagesList");if(!box||messagesRaw===null)return;
+ let list=Object.entries(messagesRaw).reverse();
+ let unread=list.filter(([,m])=>!m.read).length,c=document.getElementById("msgCount");
+ if(c){c.textContent=unread;c.style.display=unread?"inline-block":"none";}
+ box.innerHTML=list.length?list.map(([k,m])=>`<div class="product-row" style="grid-template-columns:1fr auto;${m.read?"":"background:#fff6e8;"}"><div><b>${esc(m.name)}</b> ${m.read?"":'<span class="badge">New</span>'}<br><span style="font-size:12px;color:#76695d">${esc(m.email)}${m.phone?" · "+esc(m.phone):""} · ${m.created?esc(new Date(m.created).toLocaleString()):""}</span><p style="white-space:pre-wrap;margin:8px 0 0">${esc(m.message)}</p></div><div class="actions">${m.read?"":`<button class="secondary" onclick="markMessageRead('${esc(k)}')">Mark read</button>`}<a href="mailto:${esc(m.email)}"><button class="secondary">Reply</button></a><button class="danger" onclick="delMessage('${esc(k)}')">Delete</button></div></div>`).join(""):"<p>No messages yet.</p>";
+}
+async function markMessageRead(k){try{await db.ref(`messages/${k}/read`).set(true);}catch(e){toast("Update failed: "+e.message,"err")}}
+async function delMessage(k){
+ let m=(messagesRaw||{})[k]||{};
+ if(!confirm(`Delete the message from ${m.name||"this customer"}?`))return;
+ try{await db.ref("messages/"+k).remove();logAction("Message deleted",`From ${m.name||"-"} <${m.email||"-"}>`);toast("✓ Message deleted");}catch(e){toast("Delete failed: "+e.message,"err")}
+}
+window.markMessageRead=markMessageRead;window.delMessage=delMessage;
+
+// ---- Activity log view ----
+let activityRaw=null;
+function renderActivity(){
+ let box=document.getElementById("activityList");if(!box||activityRaw===null)return;
+ let q=(document.getElementById("activitySearch").value||"").trim().toLowerCase();
+ let list=Object.values(activityRaw).sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+ if(q)list=list.filter(x=>[x.action,x.detail,x.by].join(" ").toLowerCase().includes(q));
+ box.innerHTML=list.length?`<table><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr>${list.map(x=>`<tr><td style="white-space:nowrap">${x.at?esc(new Date(x.at).toLocaleString()):"-"}</td><td>${esc(x.by)}</td><td><b>${esc(x.action)}</b></td><td style="font-size:13px">${esc(x.detail)}</td></tr>`).join("")}</table>`:`<p>${q?"Nothing matches that search.":"No activity yet — changes you make will appear here."}</p>`;
+}
+
+// ---- Stock that a failed checkout couldn't give back itself ----
+// (Shoppers are only allowed to LOWER stock, so if their order fails after
+// some packs were reserved, the store files a note here for you to apply.)
+let stockReturnsRaw={};
+function renderStockReturns(){
+ let box=document.getElementById("stockReturnsBox");if(!box)return;
+ let list=Object.entries(stockReturnsRaw||{});
+ if(!list.length){box.style.display="none";box.innerHTML="";return}
+ let lines=[];list.forEach(([,r])=>(r.items||[]).forEach(it=>lines.push(`${(products.find(p=>String(p.id)===String(it.id))||{}).name||it.id} ${(SIZE_KEYS.find(x=>x[0]===it.key)||[,it.key])[1]} × ${it.n}`)));
+ box.style.display="block";
+ box.innerHTML=`<b>⚠ Stock to add back</b><p style="font-size:13px;margin:6px 0 10px">A checkout reserved these packs but then failed, so they were never sold:<br>${lines.map(esc).join("<br>")}</p><div class="actions"><button class="primary" onclick="applyStockReturns(this)">Add back to stock</button><button class="secondary" onclick="dismissStockReturns()">Dismiss</button></div>`;
+}
+async function applyStockReturns(btn){return busy(btn,"Adding…",async()=>{
+ try{
+  let done=[];
+  for(const [k,r] of Object.entries(stockReturnsRaw||{})){
+   let back=(r.items||[]).map(it=>[it.id,it.key,Math.floor(Number(it.n)||0)]).filter(x=>x[2]>0);
+   await applyStockBack(back);await db.ref("stockReturns/"+k).remove();done.push(stockBackLines(back).replace(/• /g,"").replace(/\n/g,", "));
+  }
+  logAction("Stock returned from failed checkout",done.join(", "));toast("✓ Stock added back");
+ }catch(e){toast("Failed: "+e.message,"err")}
+});}
+async function dismissStockReturns(){if(!confirm("Dismiss without adding the stock back?"))return;try{await db.ref("stockReturns").remove();logAction("Failed-checkout stock note dismissed","");}catch(e){toast("Failed: "+e.message,"err")}}
+window.applyStockReturns=applyStockReturns;window.dismissStockReturns=dismissStockReturns;
+
+function showTab(id,btn){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
+function val(id){return document.getElementById(id).value}
+function setv(id,v){let e=document.getElementById(id);if(e)e.value=v??""}
+function loadContent(){db.ref("settings").once("value").then(s=>{let x={...defaultSettings,...(s.val()||{})};Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]));});}
+async function saveContent(btn){return busy(btn,"Saving…",async()=>{let x={};Object.keys(defaultSettings).forEach(k=>x[k]=val("s_"+k));let changed=Object.keys(x).filter(k=>String(x[k]??"")!==String(lastSettings[k]??""));try{await db.ref("settings").set(x);logAction("Store content saved",changed.length?changed.map(k=>`${k}: "${String(lastSettings[k]??"").slice(0,80)}" → "${String(x[k]).slice(0,80)}"`).join("; "):"no changes");toast("✓ Store content saved");}catch(e){toast("Save failed: "+e.message,"err");}});}
+async function resetContent(){if(confirm("Reset all store content back to the defaults? This replaces what's live on the store.")){try{await db.ref("settings").set(defaultSettings);loadContent();logAction("Store content reset","All store text reset to defaults");toast("✓ Store content reset to defaults");}catch(e){toast("Reset failed: "+e.message,"err");}}}
+
+// Sign-in check runs last, after every variable above has been created.
+// Firebase remembers the session, so a refresh keeps you signed in.
+firebase.auth().onAuthStateChanged(onAdminAuth);
+</script>
+</body></html>
