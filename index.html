@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ambrosia — Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4eee5;color:#30251d}
 button,input,select{font:inherit}button{cursor:pointer}
@@ -22,6 +25,10 @@ table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:11px 8px
 .product-row img{width:70px;height:70px;object-fit:cover;border-radius:12px;background:#eee}
 .actions{display:flex;gap:7px;flex-wrap:wrap}
 .hidden{display:none}
+.ar-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
+.ar-grid>div{min-width:0}
+[dir=rtl]{font-family:'Segoe UI',Tahoma,Arial,sans-serif}
+@media(max-width:800px){.ar-grid{grid-template-columns:1fr}}
 .toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,20px);opacity:0;z-index:2000;padding:13px 22px;border-radius:999px;font-size:14px;font-weight:600;box-shadow:0 14px 40px rgba(40,25,10,.25);transition:opacity .25s ease,transform .25s ease;pointer-events:none;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .toast.ok{background:#2f5a2a;color:#fff}.toast.err{background:#8d3e32;color:#fff}
@@ -65,14 +72,15 @@ button:disabled{opacity:.55;cursor:default}
 </div>
 
 <div id="app" class="app">
-<header class="top"><h1>Ambrosia Admin</h1><div class="actions" style="align-items:center"><span id="adminWho" style="font-size:12px;color:#76695d"></span><a href="index.html" target="_blank"><button class="secondary">Open Store</button></a><button onclick="logout()">Logout</button></div></header>
+<header class="top"><h1>Ambrosia Admin</h1><div class="actions" style="align-items:center"><span id="adminWho" style="font-size:12px;color:#76695d"></span><button class="secondary" id="alertBtn" onclick="enableOrderAlerts()" title="Sound and a notification when a new order arrives">🔔 Turn on order alerts</button><a href="https://ambrosiacoffee.store/" target="_blank" rel="noopener"><button class="secondary">Open Store</button></a><button onclick="logout()">Logout</button></div></header>
 <main class="wrap">
 <div class="tabs">
 <button class="tab active" onclick="showTab('products',this)">Products</button>
 <button class="tab" onclick="showTab('collections',this)">Collections</button>
-<button class="tab" onclick="showTab('orders',this)">Orders</button>
+<button class="tab" onclick="showTab('orders',this);clearNewOrders()">Orders <span id="newOrderCount" class="badge" style="display:none;padding:2px 7px;margin-left:3px;background:#8d3e32;color:#fff"></span></button>
 <button class="tab" onclick="showTab('customers',this)">Customers</button>
 <button class="tab" onclick="showTab('content',this)">Store Content</button>
+<button class="tab" onclick="showTab('promos',this)">Promo Codes</button>
 <button class="tab" onclick="showTab('messages',this)">Messages <span id="msgCount" class="badge" style="display:none;padding:2px 7px;margin-left:3px"></span></button>
 <button class="tab" onclick="showTab('activity',this)">Activity Log</button>
 <button class="tab" onclick="showTab('settings',this)">Settings</button>
@@ -109,6 +117,15 @@ button:disabled{opacity:.55;cursor:default}
 <textarea id="pbrewing" placeholder="Brewing Guide"></textarea>
 <input id="porigin" placeholder="Origin e.g. Minas Gerais, Brazil">
 </div>
+<details id="parBox" style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
+<summary style="cursor:pointer;font-weight:700">العربية — Arabic (optional)</summary>
+<p style="font-size:12px;color:#76695d">Shown when a customer switches the store to Arabic. Empty boxes show the English text instead.</p>
+<input id="pname_ar" dir="rtl" placeholder="اسم المنتج — Product name in Arabic">
+<input id="ptasting_ar" dir="rtl" placeholder="سطر النكهات — e.g. شوكولاتة · بندق · كراميل">
+<textarea id="pdescription_ar" dir="rtl" placeholder="الوصف — Description in Arabic"></textarea>
+<textarea id="ptastingnotes_ar" dir="rtl" placeholder="ملاحظات التذوق — Tasting notes in Arabic"></textarea>
+<textarea id="pbrewing_ar" dir="rtl" placeholder="طريقة التحضير — Brewing guide in Arabic"></textarea>
+</details>
 <button class="primary" id="saveProductBtn" onclick="saveProduct(this)">Save Product</button>
 <button class="secondary" onclick="clearForm()">Clear</button>
 </div>
@@ -124,6 +141,7 @@ button:disabled{opacity:.55;cursor:default}
 <input id="colimg" placeholder="Image URL — or upload below">
 <div class="img-upload-row"><label class="upload-btn">Upload Image<input type="file" accept="image/*" onchange="handleImageUpload(this,'colimg')"></label><img id="colimg_preview" class="img-upload-preview"></div>
 <input id="collink" placeholder="Link (optional, default #store)">
+<input id="colname_ar" dir="rtl" placeholder="الاسم بالعربية — Arabic name (optional)">
 <button class="primary" onclick="saveCollection(this)">Save Collection</button>
 <button class="secondary" onclick="clearCollectionForm()">Clear</button>
 </div>
@@ -252,12 +270,63 @@ button:disabled{opacity:.55;cursor:default}
   </div>
 
   <div class="panel full">
+    <h3>العربية — Arabic Text <span style="font-weight:400;font-size:13px;color:#8a7968">(optional)</span></h3>
+    <p style="font-size:12px;color:#76695d">Shown when a customer switches the store to Arabic. Leave a box empty to use the Arabic text shown in grey (the built-in translation). Only fill in the ones you want to change.</p>
+    <div class="ar-grid">
+    <div><label>Top Bar Text</label><input id="s_topbar_ar" dir="rtl" placeholder="قهوة محمّصة طازجة • توصيل داخل الإمارات"></div>
+    <div><label>Home Label</label><input id="s_home_ar" dir="rtl" placeholder="الرئيسية"></div>
+    <div><label>Shop Label</label><input id="s_shop_ar" dir="rtl" placeholder="المتجر"></div>
+    <div><label>Collections Label</label><input id="s_collections_ar" dir="rtl" placeholder="المجموعات"></div>
+    <div><label>Coffee Beans Label (footer)</label><input id="s_coffee_ar" dir="rtl" placeholder="حبوب القهوة"></div>
+    <div><label>Best Sellers Label (footer)</label><input id="s_best_ar" dir="rtl" placeholder="الأكثر مبيعًا"></div>
+    <div><label>About Us Label</label><input id="s_aboutnav_ar" dir="rtl" placeholder="من نحن"></div>
+    <div><label>Contact Label</label><input id="s_contactnav_ar" dir="rtl" placeholder="تواصل معنا"></div>
+    <div><label>Hero Eyebrow</label><input id="s_eyebrow_ar" dir="rtl" placeholder="قهوة مختصة، محمّصة بإتقان"></div>
+    <div><label>Hero Title (use | for the line break, last word turns gold)</label><input id="s_herotitle_ar" dir="rtl" placeholder="حبوب قهوة طازجة | محمّصة بشغف"></div>
+    <div><label>Hero Description</label><textarea id="s_herodesc_ar" dir="rtl" placeholder="اكتشف أجود أنواع القهوة أحادية المصدر وخلطاتنا المميزة، محمّصة بإتقان وتصلك طازجة حتى باب منزلك." style="width:100%;min-height:70px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea></div>
+    <div><label>Hero Button</label><input id="s_herobutton_ar" dir="rtl" placeholder="تسوّق الآن"></div>
+    <div><label>Featured Section Title</label><input id="s_storetitle_ar" dir="rtl" placeholder="قهوتنا المميزة"></div>
+    <div><label>Featured Section Description</label><textarea id="s_storedesc_ar" dir="rtl" placeholder="أكثر أنواع قهوتنا طلبًا، مختارة لتحضيرك اليومي." style="width:100%;min-height:70px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea></div>
+    <div><label>Collections Heading</label><input id="s_collectiontitle_ar" dir="rtl" placeholder="مجموعة قهوتنا"></div>
+    <div><label>Collections Description</label><input id="s_collectiondesc_ar" dir="rtl" placeholder="اختر أسلوب قهوتك المفضّل."></div>
+    <div><label>Help Heading</label><input id="s_abouttitle_ar" dir="rtl" placeholder="تحتاج مساعدة في اختيار قهوتك؟"></div>
+    <div><label>Help Text</label><textarea id="s_abouttext_ar" dir="rtl" placeholder="أخبرنا كيف تحضّر قهوتك وما النكهات التي تحبها، وسنساعدك في اختيار حبوب أمبروزيا المناسبة لك." style="width:100%;min-height:70px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea></div>
+    <div><label>Help Button</label><input id="s_helpbutton_ar" dir="rtl" placeholder="اطلب المساعدة"></div>
+    <div><label>Contact Location Text</label><input id="s_uae_ar" dir="rtl" placeholder="الإمارات العربية المتحدة"></div>
+    <div><label>Footer Description</label><textarea id="s_footerdesc_ar" dir="rtl" placeholder="حبوب قهوة محمّصة طازجة للمنازل والمقاهي ومحبي القهوة في جميع أنحاء الإمارات." style="width:100%;min-height:70px;padding:12px;border:1px solid #d8c8b5;border-radius:12px;background:#fffaf4"></textarea></div>
+    <div><label>Copyright</label><input id="s_copyright_ar" dir="rtl" placeholder="© 2026 أمبروزيا للقهوة. جميع الحقوق محفوظة."></div>
+    </div>
+  </div>
+
+  <div class="panel full">
     <div class="actions">
       <button class="primary" onclick="saveContent(this)">Save All Store Content</button>
       <button class="secondary" onclick="loadContent()">Reload Saved Content</button>
       <button class="secondary" onclick="resetContent()">Reset Content</button>
     </div>
   </div>
+</section>
+
+<section id="promos" class="grid hidden">
+<div class="panel">
+<h2>Add / Edit Promo Code</h2>
+<div class="editing-note" id="promoEditingNote"></div>
+<label>Code <span style="color:#8a7968">(letters and numbers, e.g. WELCOME10)</span></label>
+<input id="promoCode" placeholder="WELCOME10" style="text-transform:uppercase" maxlength="30">
+<label>Discount type</label>
+<select id="promoType"><option value="percent">Percentage off (%)</option><option value="fixed">Fixed amount off (AED)</option></select>
+<label>Discount value</label>
+<input id="promoValue" type="number" step=".01" min="0" placeholder="e.g. 10">
+<label>Minimum order (AED, optional)</label>
+<input id="promoMin" type="number" step=".01" min="0" placeholder="e.g. 100 — leave blank for none">
+<label>Last day it works (optional)</label>
+<input id="promoExpires" type="date">
+<label style="display:flex;align-items:center;gap:8px;font-size:14px;color:#30251d;margin:4px 0 14px"><input id="promoActive" type="checkbox" checked style="width:auto;margin:0"> Active (customers can use it)</label>
+<p style="font-size:12px;color:#76695d">The discount is taken off the coffee subtotal (not the AED 30 delivery). A fixed amount can't be more than the subtotal.</p>
+<button class="primary" onclick="savePromo(this)">Save Promo Code</button>
+<button class="secondary" onclick="clearPromoForm()">Clear</button>
+</div>
+<div class="panel"><h2>Promo Codes</h2><p style="font-size:12px;color:#76695d">Uses and total discount are counted from your orders.</p><div id="promoList"><p>Loading…</p></div></div>
 </section>
 
 <section id="messages" class="panel hidden">
@@ -276,6 +345,19 @@ button:disabled{opacity:.55;cursor:default}
 <section id="settings" class="panel hidden">
 <h2>Store Settings</h2>
 <p>Delivery charge is fixed at <b>AED 30.00</b> on the customer checkout.</p>
+
+<div style="margin-top:22px;padding:18px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
+<h3 style="margin-top:0">Move product images out of the database</h3>
+<p style="font-size:13px;color:#5b4c3d;line-height:1.6">Photos uploaded with the <b>Upload Image</b> buttons are stored inside the Firebase database. Every shopper downloads all of them when the store opens, which makes the store slower and uses up the free plan. Moving them to your store's GitHub makes the store faster and keeps the database small.</p>
+<div id="imgMoveStatus" style="font-size:14px;margin:12px 0;padding:12px 14px;border-radius:12px;background:#fff">Checking…</div>
+<ol style="font-size:14px;line-height:1.7;padding-left:20px;margin:0 0 12px">
+<li><b>Download the images.</b> <button class="secondary" style="margin-left:6px" onclick="downloadDbImages(this)">Download images (.zip)</button></li>
+<li><b>Upload them to the store's GitHub.</b> Unzip the file. In the GitHub repository of <b>ambrosiacoffee.store</b>, press <b>Add file → Upload files</b> and drop in the <b>images</b> folder, then <b>Commit changes</b>. Wait 2–3 minutes.</li>
+<li><b>Switch the store to the GitHub images.</b> Each image is checked first; only images that load correctly are switched, the rest stay as they are.
+<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px"><input id="imgBaseUrl" value="https://ambrosiacoffee.store/images/" style="flex:1;min-width:240px;margin:0"><button class="primary" onclick="switchDbImages(this)">Check &amp; switch</button></div></li>
+</ol>
+<div id="imgMoveResult" style="font-size:13px;color:#5b4c3d"></div>
+</div>
 </section>
 </main></div>
 
@@ -320,7 +402,8 @@ collectiontitle:"Our Coffee Collection",collectiondesc:"Choose your favourite st
 abouttitle:"Need help choosing your coffee?",abouttext:"Tell us how you brew your coffee and what flavour you like. We can help you choose the right Ambrosia beans.",helpbutton:"Ask For Help",
 deliverytitle:"Delivery",delivery:"Fast delivery across the UAE. Delivery charges are AED 30.00.",returnstitle:"Returns",returns:"Please contact us if your order arrives damaged or incorrect. We will review the issue and assist you.",
 email:"info@ambrosiacoffee.ae",whatsapp:"+971",uae:"UAE",footerbrand:"AMBROSIA SPECIALITY",footerdesc:"Freshly roasted coffee beans for homes, cafés and coffee lovers across the UAE.",copyright:"© 2026 Ambrosia Coffee Beans. All Rights Reserved.",
-facebook:"",instagram:"",tiktok:"",twitter:""
+facebook:"",instagram:"",tiktok:"",twitter:"",
+topbar_ar:"",home_ar:"",shop_ar:"",collections_ar:"",coffee_ar:"",best_ar:"",aboutnav_ar:"",contactnav_ar:"",eyebrow_ar:"",herotitle_ar:"",herodesc_ar:"",herobutton_ar:"",storetitle_ar:"",storedesc_ar:"",collectiontitle_ar:"",collectiondesc_ar:"",abouttitle_ar:"",abouttext_ar:"",helpbutton_ar:"",uae_ar:"",footerdesc_ar:"",copyright_ar:""
 };
 
 let products=[];
@@ -348,6 +431,8 @@ function describeProductChanges(a,b){
  });
  if([a.img,...(a.gallery||[])].join("|")!==[b.img,...(b.gallery||[])].join("|"))out.push("images changed");
  ["description","tastingNotes","brewingGuide","tastingShort","origin"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push(f+" changed")});
+ if((a.name_ar||"")!==(b.name_ar||""))out.push(`Arabic name "${a.name_ar||"-"}" → "${b.name_ar||"-"}"`);
+ ["tastingShort_ar","description_ar","tastingNotes_ar","brewingGuide_ar"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push("Arabic "+f.replace("_ar","")+" changed")});
  if(Number(a.rating||5)!==Number(b.rating||5))out.push(`rating ${a.rating||5} → ${b.rating||5}`);
  if(Number(a.reviewCount||0)!==Number(b.reviewCount||0))out.push(`review count ${a.reviewCount||0} → ${b.reviewCount||0}`);
  return out.join("; ");
@@ -428,6 +513,7 @@ function handleImageUpload(fileInput,targetId){
    document.getElementById(targetId).value=dataUrl;
    setImgPreview(targetId,dataUrl);
    let kb=Math.round(dataUrl.length*0.75/1024);
+   toast("Image added. Tip: later use Settings → Move images to keep the store fast.");
    if(kb>180){alert(`This image compressed to ~${kb}KB, which is on the larger side for the database. It will still work, but for a lot of products consider pasting a hosted image URL instead of uploading.`);}
   };
   img.onerror=()=>alert("Could not read that image file.");
@@ -468,14 +554,15 @@ async function onAdminAuth(u){
  adminUser=u;document.getElementById("adminWho").textContent=u.email||"";
  openApp();
 }
-function openApp(){if(appOpened)return;appOpened=true;document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";renderProducts();renderCollections();renderOrders();renderCustomers();loadContent();subscribeFirebase();}
+function openApp(){if(appOpened)return;appOpened=true;setTimeout(updateAlertBtn,0);document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";renderProducts();renderCollections();renderOrders();renderCustomers();loadContent();subscribeFirebase();}
 function logout(){firebase.auth().signOut().then(()=>location.reload());}
 
 function subscribeFirebase(){
  db.ref("products").on("value",s=>{productsLoaded=true;let v=s.val();products=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderProducts();});
  db.ref("collections").on("value",s=>{collectionsLoaded=true;let v=s.val();collections=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderCollections();});
- db.ref("orders").on("value",s=>{ordersRaw=s.val()||{};renderOrders();renderCustomers();});
+ db.ref("orders").on("value",s=>{let v=s.val()||{};checkNewOrders(v);ordersRaw=v;renderOrders();renderCustomers();renderPromos();});
  db.ref("stock").on("value",s=>{stockData=s.val()||{};renderProducts();});
+ db.ref("promos").on("value",s=>{promosRaw=s.val()||{};renderPromos();},e=>{let b=document.getElementById("promoList");if(b)b.innerHTML=`<p style="color:#9a4435">Couldn't load promo codes: ${esc(e.message)}. Please publish the latest database rules.</p>`});
  db.ref("messages").on("value",s=>{messagesRaw=s.val()||{};renderMessages();},e=>console.error(e));
  db.ref("auditLog").limitToLast(300).on("value",s=>{activityRaw=s.val()||{};renderActivity();},e=>{document.getElementById("activityList").innerHTML=`<p style="color:#9a4435">Couldn't load the activity log: ${esc(e.message)}</p>`});
  db.ref("stockReturns").on("value",s=>{stockReturnsRaw=s.val()||{};renderStockReturns();},e=>console.error(e));
@@ -494,7 +581,8 @@ async function saveProductInner(){
  let enabled=Object.values(sizes).filter(x=>x.enabled&&x.price>0),basePrice=enabled.length?enabled[0].price:0,baseOld=enabled.length?(enabled[0].old||0):0;
  let imgs=["pimg1","pimg2","pimg3"].map(k=>document.getElementById(k).value.trim()).filter(Boolean);
  let p={id:String(id),name:document.getElementById("pname").value.trim(),price:basePrice,old:baseOld,img:imgs[0]||"",gallery:imgs.slice(1),badge:document.getElementById("pbadge").value.trim(),cat:document.getElementById("pcat").value,sizes,
-rating:+document.getElementById("prating").value||5,reviewCount:+document.getElementById("previewcount").value||0,tastingShort:document.getElementById("ptasting").value.trim(),description:document.getElementById("pdescription").value.trim(),tastingNotes:document.getElementById("ptastingnotes").value.trim(),brewingGuide:document.getElementById("pbrewing").value.trim(),origin:document.getElementById("porigin").value.trim()};
+rating:+document.getElementById("prating").value||5,reviewCount:+document.getElementById("previewcount").value||0,tastingShort:document.getElementById("ptasting").value.trim(),description:document.getElementById("pdescription").value.trim(),tastingNotes:document.getElementById("ptastingnotes").value.trim(),brewingGuide:document.getElementById("pbrewing").value.trim(),origin:document.getElementById("porigin").value.trim(),
+name_ar:document.getElementById("pname_ar").value.trim(),tastingShort_ar:document.getElementById("ptasting_ar").value.trim(),description_ar:document.getElementById("pdescription_ar").value.trim(),tastingNotes_ar:document.getElementById("ptastingnotes_ar").value.trim(),brewingGuide_ar:document.getElementById("pbrewing_ar").value.trim()};
  if(!p.name||!basePrice)return alert("Product name and at least one enabled pack size price are required.");
  let i=products.findIndex(x=>String(x.id)===String(id));let before=i>=0?JSON.parse(JSON.stringify(products[i])):null;if(i>=0)products[i]=p;else products.push(p);
  try{
@@ -533,7 +621,10 @@ function edit(id){
  if(p.cat&&![...catSel.options].some(o=>o.value===p.cat))catSel.insertAdjacentHTML("beforeend",`<option value="${esc(p.cat)}">${esc(p.cat)} (no collection)</option>`);
  catSel.value=p.cat||catSel.value;
  SIZE_KEYS.forEach(([k,,pre])=>{let v=stockOf(p.id,k),el=document.getElementById(pre+"_stock");el.value=v===null?"":v;el.dataset.loaded=el.value;});
-document.getElementById("prating").value=p.rating??5;document.getElementById("previewcount").value=p.reviewCount??p.reviews??0;document.getElementById("ptasting").value=p.tastingShort||p.shortDescription||"";document.getElementById("pdescription").value=p.description||"";document.getElementById("ptastingnotes").value=p.tastingNotes||"";document.getElementById("pbrewing").value=p.brewingGuide||"";document.getElementById("porigin").value=p.origin||"";let s=p.sizes||{};
+document.getElementById("prating").value=p.rating??5;document.getElementById("previewcount").value=p.reviewCount??p.reviews??0;document.getElementById("ptasting").value=p.tastingShort||p.shortDescription||"";document.getElementById("pdescription").value=p.description||"";document.getElementById("ptastingnotes").value=p.tastingNotes||"";document.getElementById("pbrewing").value=p.brewingGuide||"";document.getElementById("porigin").value=p.origin||"";
+ [["pname_ar","name_ar"],["ptasting_ar","tastingShort_ar"],["pdescription_ar","description_ar"],["ptastingnotes_ar","tastingNotes_ar"],["pbrewing_ar","brewingGuide_ar"]].forEach(([el,f])=>document.getElementById(el).value=p[f]||"");
+ document.getElementById("parBox").open=!!(p.name_ar||p.tastingShort_ar||p.description_ar||p.tastingNotes_ar||p.brewingGuide_ar);
+ let s=p.sizes||{};
  [["g200","size200"],["g250","size250"],["kg1","size1kg"]].forEach(([k,pre])=>{let x=s[k]||{};document.getElementById(pre+"_enabled").checked=x.enabled!==false;document.getElementById(pre+"_price").value=x.price||"";document.getElementById(pre+"_old").value=x.old||""});
  let n=document.getElementById("editingNote");n.innerHTML=`Editing <b>${esc(p.name)}</b> — press <b>Update Product</b> to save, or <b>Clear</b> to cancel.`;n.classList.add("show");
  document.getElementById("saveProductBtn").textContent="Update Product";
@@ -554,12 +645,12 @@ async function moveProduct(id,dir){
  renderProducts();
  try{await saveProducts();logAction("Products reordered",`${products[j].name} moved ${dir<0?"up":"down"}`);toast("✓ Product order saved");}catch(e){toast("Save failed: "+e.message,"err");}
 }
-function clearForm(){["pid","pname","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin"].forEach(x=>document.getElementById(x).value="");["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);["pimg1","pimg2","pimg3"].forEach(x=>setImgPreview(x,""));SIZE_KEYS.forEach(([,,pre])=>{let el=document.getElementById(pre+"_stock");el.value="";el.dataset.loaded="";});document.getElementById("editingNote").classList.remove("show");document.getElementById("saveProductBtn").textContent="Save Product";}
+function clearForm(){["pid","pname","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin","pname_ar","ptasting_ar","pdescription_ar","ptastingnotes_ar","pbrewing_ar"].forEach(x=>document.getElementById(x).value="");document.getElementById("parBox").open=false;["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);["pimg1","pimg2","pimg3"].forEach(x=>setImgPreview(x,""));SIZE_KEYS.forEach(([,,pre])=>{let el=document.getElementById(pre+"_stock");el.value="";el.dataset.loaded="";});document.getElementById("editingNote").classList.remove("show");document.getElementById("saveProductBtn").textContent="Save Product";}
 
 async function saveCollections(){if(!collectionsLoaded)throw new Error("collections are still loading — wait a moment and try again");await db.ref("collections").set(collections);}
 async function saveCollection(btn){return busy(btn,"Saving…",async()=>{
  let id=document.getElementById("colid").value||("col"+Date.now());
- let c={id:String(id),name:document.getElementById("colname").value.trim(),img:document.getElementById("colimg").value.trim(),link:document.getElementById("collink").value.trim()||"#store"};
+ let c={id:String(id),name:document.getElementById("colname").value.trim(),img:document.getElementById("colimg").value.trim(),link:document.getElementById("collink").value.trim()||"#store",name_ar:document.getElementById("colname_ar").value.trim()};
  if(!c.name||!c.img)return alert("Collection name and image are required.");
  let i=collections.findIndex(x=>String(x.id)===String(id));
  let oldName=i>=0?collections[i].name:null;
@@ -582,6 +673,7 @@ function editCollection(id){
  document.getElementById("colname").closest(".panel").scrollIntoView({behavior:"smooth",block:"start"});
  document.getElementById("colid").value=c.id;
  document.getElementById("colname").value=c.name;
+ document.getElementById("colname_ar").value=c.name_ar||"";
  document.getElementById("colimg").value=c.img;
  document.getElementById("collink").value=c.link||"";
  setImgPreview("colimg",c.img);
@@ -594,7 +686,7 @@ async function delCollection(id){
  if(String(document.getElementById("colid").value)===String(id))clearCollectionForm();
  try{await saveCollections();renderCollections();logAction("Collection deleted",`${c?c.name:id}${inUse?` (${inUse} products were in it)`:""}`);toast("✓ Collection deleted");}catch(e){toast("Delete failed: "+e.message,"err");}
 }
-function clearCollectionForm(){["colid","colname","colimg","collink"].forEach(x=>document.getElementById(x).value="");setImgPreview("colimg","");document.getElementById("colEditingNote").classList.remove("show");}
+function clearCollectionForm(){["colid","colname","colimg","collink","colname_ar"].forEach(x=>document.getElementById(x).value="");setImgPreview("colimg","");document.getElementById("colEditingNote").classList.remove("show");}
 async function moveCollection(id,dir){
  let i=collections.findIndex(x=>String(x.id)===String(id));if(i<0)return;
  let j=i+dir;if(j<0||j>=collections.length)return;
@@ -612,7 +704,7 @@ function renderCategoryOptions(){
 }
 function renderCollections(){
  let box=document.getElementById("collectionsList");if(!box)return;
- box.innerHTML=collections.length?collections.map((c,idx)=>`<div class="product-row"><img src="${esc(c.img)}" onerror="this.style.opacity=.25"><div><b>${esc(c.name)}</b><br><span class="badge">${esc(c.link||"#store")}</span></div><div class="actions"><button class="secondary" ${idx===0?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',-1)">↑</button><button class="secondary" ${idx===collections.length-1?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',1)">↓</button><button class="secondary" onclick="editCollection('${String(c.id).replace(/'/g,"\'")}')">Edit</button><button class="danger" onclick="delCollection('${String(c.id).replace(/'/g,"\'")}')">Delete</button></div></div>`).join(""):"<p>No collections yet.</p>";
+ box.innerHTML=collections.length?collections.map((c,idx)=>`<div class="product-row"><img src="${esc(c.img)}" onerror="this.style.opacity=.25"><div><b>${esc(c.name)}</b>${c.name_ar?` <span dir="rtl" style="color:#8a7968">· ${esc(c.name_ar)}</span>`:""}<br><span class="badge">${esc(c.link||"#store")}</span></div><div class="actions"><button class="secondary" ${idx===0?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',-1)">↑</button><button class="secondary" ${idx===collections.length-1?"disabled":""} onclick="moveCollection('${String(c.id).replace(/'/g,"\'")}',1)">↓</button><button class="secondary" onclick="editCollection('${String(c.id).replace(/'/g,"\'")}')">Edit</button><button class="danger" onclick="delCollection('${String(c.id).replace(/'/g,"\'")}')">Delete</button></div></div>`).join(""):"<p>No collections yet.</p>";
  renderCategoryOptions();
 }
 
@@ -629,7 +721,16 @@ function orderPriceIssues(o){
  let items=Array.isArray(o.items)?o.items:[],issues=[];
  let sub=items.reduce((a,it)=>a+Number(it.price||0)*Number(it.qty||0),0);
  if(Math.abs(sub-Number(o.subtotal||0))>0.01)issues.push("items don't add up to the subtotal");
- if(Math.abs(Number(o.subtotal||0)+Number(o.deliveryCharge||0)-Number(o.total||0))>0.01)issues.push("total doesn't match subtotal + delivery");
+ let disc=Number(o.discount||0);
+ if(Math.abs(Number(o.subtotal||0)-disc+Number(o.deliveryCharge||0)-Number(o.total||0))>0.01)issues.push(disc?"total doesn't match subtotal − discount + delivery":"total doesn't match subtotal + delivery");
+ if(disc||o.promo){
+  let pr=o.promo||{},sub=Number(o.subtotal||0),v=Number(pr.value)||0;
+  let expect=Math.round((pr.type==="fixed"?Math.min(v,sub):sub*Math.min(v,100)/100)*100)/100;
+  if(!pr.code)issues.push("discount given without a promo code");
+  else if(Math.abs(expect-disc)>0.01)issues.push(`discount AED ${money2(disc)} doesn't match code ${pr.code}`);
+  else if(promosRaw&&!promosRaw[pr.code])issues.push(`promo code ${pr.code} doesn't exist (any more)`);
+  else if(promosRaw&&promosRaw[pr.code]){let cur=promosRaw[pr.code];if(cur.type!==pr.type||Number(cur.value)!==v)issues.push(`code ${pr.code} is now ${promoText(cur)} (order used ${promoText(pr)})`)}
+ }
  if(Number(o.deliveryCharge)!==30)issues.push("delivery charge is not AED 30");
  items.forEach(it=>{
   if(!(Number(it.qty)>=1)||Number(it.qty)%1)issues.push(`${it.name}: odd quantity`);
@@ -655,7 +756,7 @@ async function setOrderStatus(key,status){
  }catch(e){toast("Status update failed: "+e.message,"err");renderOrders();}
 }
 window.setOrderStatus=setOrderStatus;
-function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x);return `<tr><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
+function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x);return `<tr><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}${x.lang==="ar"?` <span class="badge" title="Ordered using the Arabic store" style="padding:2px 7px;background:#dfe9e6;color:#23514b">AR</span>`:""}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
 function orderStockBack(o){
  let back=[];
  if(o&&o.stockDeducted&&o.stockTaken&&typeof o.stockTaken==="object"){
@@ -716,7 +817,7 @@ function viewInvoice(i){
  let items=Array.isArray(o.items)?o.items:[];
  let dateStr=o.created?new Date(o.created).toLocaleString(undefined,{year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"2-digit",second:"2-digit"}):"-";
  let rows=items.map(it=>`<tr>
-   <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9">${esc(it.name)}${it.size?` (${esc(it.size)})`:""}</td>
+   <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9">${esc(it.name)}${it.size||it.grind?` (${[it.size,it.grind].filter(Boolean).map(esc).join(", ")})`:""}</td>
    <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9;text-align:center">${Number(it.qty||0)}</td>
    <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9;text-align:right">AED ${Number(it.price||0).toFixed(2)}</td>
    <td style="padding:11px 8px;border-bottom:1px solid #ecdfc9;text-align:right">AED ${(Number(it.price||0)*Number(it.qty||0)).toFixed(2)}</td>
@@ -770,6 +871,7 @@ function viewInvoice(i){
    <div style="display:flex;justify-content:flex-end;margin-top:20px">
     <table style="font-size:13px;width:280px;border:1px solid #e4d0ad;border-radius:8px;padding:14px 16px;border-spacing:0">
      <tr><td style="padding:4px 0;color:#76695d">Subtotal</td><td style="padding:4px 0;text-align:right">AED ${Number(o.subtotal||0).toFixed(2)}</td></tr>
+     ${Number(o.discount)>0?`<tr><td style="padding:4px 0;color:#76695d">Discount${o.promo&&o.promo.code?` (${esc(o.promo.code)})`:""}</td><td style="padding:4px 0;text-align:right;color:#2c7a3c">−AED ${Number(o.discount).toFixed(2)}</td></tr>`:""}
      <tr><td style="padding:4px 0;color:#76695d">Delivery</td><td style="padding:4px 0;text-align:right">AED ${Number(o.deliveryCharge||0).toFixed(2)}</td></tr>
      <tr><td style="padding:10px 0 0;border-top:2px solid #2b2119;font-size:16px;font-weight:700">Total</td><td style="padding:10px 0 0;border-top:2px solid #2b2119;text-align:right;font-size:16px;font-weight:700">AED ${Number(o.total||0).toFixed(2)}</td></tr>
     </table>
@@ -785,6 +887,94 @@ function viewInvoice(i){
 function closeInvoice(){document.getElementById("invoiceOverlay").classList.remove("open")}
 function printInvoice(){window.print()}
 window.viewInvoice=viewInvoice;window.closeInvoice=closeInvoice;window.printInvoice=printInvoice;
+// ---- New order alert: sound + notification + counter while this page is open ----
+let knownOrderKeys=null,newOrders=0,audioCtx=null;
+function unlockAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume()}catch(e){}}
+document.addEventListener("click",unlockAudio,{once:false,passive:true});
+function chime(){
+ try{unlockAudio();if(!audioCtx)return;let t0=audioCtx.currentTime;
+  [[880,0],[1175,.18],[1568,.36]].forEach(([f,dt])=>{let o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type="sine";o.frequency.value=f;g.gain.setValueAtTime(0.0001,t0+dt);g.gain.exponentialRampToValueAtTime(0.35,t0+dt+.02);g.gain.exponentialRampToValueAtTime(0.0001,t0+dt+.5);o.connect(g).connect(audioCtx.destination);o.start(t0+dt);o.stop(t0+dt+.55)});
+ }catch(e){}
+}
+function alertsOn(){return localStorageGet("ambrosia_alerts")==="1"}
+function localStorageGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function localStorageSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function updateAlertBtn(){
+ let b=document.getElementById("alertBtn");if(!b)return;
+ let perm=("Notification" in window)?Notification.permission:"unsupported";
+ if(alertsOn()){b.textContent=perm==="granted"?"🔔 Order alerts on":"🔔 Sound alerts on";b.title="Click to test the alert";}
+ else{b.textContent="🔔 Turn on order alerts";b.title="Sound and a notification when a new order arrives";}
+}
+async function enableOrderAlerts(){
+ unlockAudio();
+ if(alertsOn()){chime();toast("🔔 This is how a new order will sound.");return}
+ localStorageSet("ambrosia_alerts","1");
+ if("Notification" in window&&Notification.permission==="default"){try{await Notification.requestPermission()}catch(e){}}
+ chime();updateAlertBtn();
+ toast(("Notification" in window&&Notification.permission==="granted")?"✓ Alerts on — sound + notification for new orders":"✓ Sound alerts on (notifications were not allowed in this browser)");
+}
+window.enableOrderAlerts=enableOrderAlerts;
+function setTitleCount(){document.title=(newOrders?`(${newOrders}) `:"")+"Ambrosia — Admin";let c=document.getElementById("newOrderCount");if(c){c.textContent=newOrders+" new";c.style.display=newOrders?"inline-block":"none"}}
+function clearNewOrders(){newOrders=0;setTitleCount()}
+window.clearNewOrders=clearNewOrders;
+function checkNewOrders(v){
+ let keys=Object.keys(v);
+ if(knownOrderKeys===null){knownOrderKeys=new Set(keys);return} // first load: nothing is "new"
+ let fresh=keys.filter(k=>!knownOrderKeys.has(k));keys.forEach(k=>knownOrderKeys.add(k));
+ if(!fresh.length)return;
+ newOrders+=fresh.length;setTitleCount();
+ let o=v[fresh[fresh.length-1]]||{},who=o.customer?.fullname||"a customer",msg=`New order ${o.orderNo||""} — ${who}, AED ${money2(o.total)}`;
+ toast("🛎️ "+msg);
+ if(alertsOn()){
+  chime();
+  try{if("Notification" in window&&Notification.permission==="granted"){let n=new Notification("🛎️ New Ambrosia order",{body:`${o.orderNo||""} · ${who} · AED ${money2(o.total)}`,tag:"order-"+fresh[0],icon:"favicon-192.png"});n.onclick=()=>{window.focus();let b=[...document.querySelectorAll(".tab")].find(x=>x.textContent.startsWith("Orders"));if(b){showTab("orders",b);clearNewOrders()}n.close()}}}catch(e){}
+ }
+}
+window.addEventListener("focus",()=>{let s=document.getElementById("orders");if(s&&!s.classList.contains("hidden"))clearNewOrders()});
+
+// ---- Promo codes: promos/{CODE} = {type,value,minSubtotal,expires,active} ----
+let promosRaw=null;
+function promoText(pr){return pr.type==="fixed"?`AED ${money2(pr.value)} off`:`${Number(pr.value)}% off`}
+function renderPromos(){
+ let box=document.getElementById("promoList");if(!box||promosRaw===null)return;
+ let codes=Object.keys(promosRaw).sort();
+ if(!codes.length){box.innerHTML="<p>No promo codes yet.</p>";return}
+ let today=new Date().toISOString().slice(0,10);
+ box.innerHTML=codes.map(code=>{
+  let pr=promosRaw[code]||{},used=Object.values(ordersRaw||{}).filter(o=>o.promo&&o.promo.code===code),given=used.reduce((a,o)=>a+Number(o.discount||0),0);
+  let expired=pr.expires&&pr.expires<today,state=pr.active===false?`<span class="badge" style="background:#eee4d7;color:#76695d">Off</span>`:expired?`<span class="badge" style="background:#f3d9a4;color:#7a4a12">Expired</span>`:`<span class="badge" style="background:#dcebd6;color:#2f5a2a">Active</span>`;
+  return `<div class="product-row" style="grid-template-columns:1fr auto"><div><b style="font-size:16px;letter-spacing:.5px">${esc(code)}</b> ${state}<br><span style="font-size:13px">${esc(promoText(pr))}${Number(pr.minSubtotal)?` · min order AED ${money2(pr.minSubtotal)}`:""}${pr.expires?` · until ${esc(pr.expires)}`:""}</span><br><span style="font-size:12px;color:#76695d">Used ${used.length} time${used.length===1?"":"s"} · AED ${money2(given)} discount given</span></div><div class="actions"><button class="secondary" onclick="togglePromo('${esc(code)}')">${pr.active===false?"Turn on":"Turn off"}</button><button class="secondary" onclick="editPromo('${esc(code)}')">Edit</button><button class="danger" onclick="delPromo('${esc(code)}')">Delete</button></div></div>`;
+ }).join("");
+}
+function clearPromoForm(){["promoCode","promoValue","promoMin","promoExpires"].forEach(id=>document.getElementById(id).value="");document.getElementById("promoType").value="percent";document.getElementById("promoActive").checked=true;document.getElementById("promoCode").disabled=false;document.getElementById("promoEditingNote").classList.remove("show")}
+function editPromo(code){
+ let pr=(promosRaw||{})[code];if(!pr)return;
+ document.getElementById("promoCode").value=code;document.getElementById("promoCode").disabled=true;
+ document.getElementById("promoType").value=pr.type==="fixed"?"fixed":"percent";
+ document.getElementById("promoValue").value=pr.value??"";document.getElementById("promoMin").value=pr.minSubtotal||"";
+ document.getElementById("promoExpires").value=pr.expires||"";document.getElementById("promoActive").checked=pr.active!==false;
+ let n=document.getElementById("promoEditingNote");n.innerHTML=`Editing <b>${esc(code)}</b> — press Save to update, or Clear to cancel.`;n.classList.add("show");
+ document.getElementById("promoCode").closest(".panel").scrollIntoView({behavior:"smooth",block:"start"});
+}
+async function savePromo(btn){return busy(btn,"Saving…",async()=>{
+ let code=document.getElementById("promoCode").value.trim().toUpperCase().replace(/\s+/g,"");
+ if(!/^[A-Z0-9_-]{2,30}$/.test(code))return alert("The code can only use letters, numbers, - and _ (2 to 30 characters).");
+ let type=document.getElementById("promoType").value,value=Number(document.getElementById("promoValue").value);
+ if(!(value>0))return alert("Enter a discount value greater than 0.");
+ if(type==="percent"&&value>100)return alert("A percentage can't be more than 100.");
+ let min=Number(document.getElementById("promoMin").value)||0,expires=document.getElementById("promoExpires").value||"";
+ let pr={type,value,minSubtotal:min,expires,active:document.getElementById("promoActive").checked,updated:new Date().toISOString()};
+ let before=(promosRaw||{})[code];
+ try{
+  await db.ref("promos/"+code).set(pr);
+  logAction(before?"Promo code updated":"Promo code added",`${code}: ${promoText(pr)}${min?`, min order AED ${money2(min)}`:""}${expires?`, until ${expires}`:""}${pr.active?"":" (off)"}`);
+  clearPromoForm();toast(before?`✓ ${code} updated`:`✓ ${code} created`);
+ }catch(e){toast("Save failed: "+e.message,"err")}
+});}
+async function togglePromo(code){let pr=(promosRaw||{})[code];if(!pr)return;let on=pr.active===false;try{await db.ref(`promos/${code}/active`).set(on);logAction(on?"Promo code turned on":"Promo code turned off",code);toast(`✓ ${code} turned ${on?"on":"off"}`)}catch(e){toast("Failed: "+e.message,"err")}}
+async function delPromo(code){if(!confirm(`Delete the promo code ${code}? Customers won't be able to use it any more.`))return;try{await db.ref("promos/"+code).remove();logAction("Promo code deleted",code);toast(`✓ ${code} deleted`)}catch(e){toast("Delete failed: "+e.message,"err")}}
+window.editPromo=editPromo;window.togglePromo=togglePromo;window.delPromo=delPromo;window.savePromo=savePromo;window.clearPromoForm=clearPromoForm;
+
 // ---- Messages (contact form) ----
 let messagesRaw=null;
 function renderMessages(){
@@ -837,11 +1027,66 @@ async function applyStockReturns(btn){return busy(btn,"Adding…",async()=>{
 async function dismissStockReturns(){if(!confirm("Dismiss without adding the stock back?"))return;try{await db.ref("stockReturns").remove();logAction("Failed-checkout stock note dismissed","");}catch(e){toast("Failed: "+e.message,"err")}}
 window.applyStockReturns=applyStockReturns;window.dismissStockReturns=dismissStockReturns;
 
-function showTab(id,btn){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
+// ---- Move images that live inside the database (data: URLs) to GitHub links ----
+const isDataImg=v=>typeof v==="string"&&v.startsWith("data:image/");
+function slugify(s){return String(s||"item").toLowerCase().normalize("NFKD").replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,40)||"item"}
+function extOf(data){let m=/^data:image\/([a-z0-9.+-]+)/i.exec(data);let e=(m?m[1]:"jpg").toLowerCase();return e==="jpeg"?"jpg":e.replace("svg+xml","svg")}
+// Every image stored in the database, with the file name it gets on GitHub.
+// Names are fixed per product/photo, so step 3 works even in a later session.
+function dbImageList(){
+ let out=[];
+ products.forEach(p=>{[p.img,...(p.gallery||[])].forEach((v,i)=>{if(isDataImg(v))out.push({kind:"product",id:p.id,index:i,data:v,file:`${slugify(p.name)}-${slugify(p.id)}-${i+1}.${extOf(v)}`,label:`${p.name} (photo ${i+1})`})})});
+ collections.forEach(c=>{if(isDataImg(c.img))out.push({kind:"collection",id:c.id,index:0,data:c.img,file:`collection-${slugify(c.name)}-${slugify(c.id)}.${extOf(c.img)}`,label:`Collection: ${c.name}`})});
+ return out;
+}
+function renderImgMoveStatus(){
+ let box=document.getElementById("imgMoveStatus");if(!box)return;
+ if(!productsLoaded||!collectionsLoaded){box.textContent="Loading…";return}
+ let list=dbImageList(),kb=Math.round(list.reduce((a,x)=>a+x.data.length*0.75,0)/1024);
+ box.innerHTML=list.length?`<b>${list.length}</b> image${list.length>1?"s are":" is"} stored inside the database (about <b>${kb>1024?(kb/1024).toFixed(1)+" MB":kb+" KB"}</b> that every shopper downloads).`:`✓ No images are stored inside the database. All product and collection images use links.`;
+}
+function loadJSZip(){return new Promise((res,rej)=>{if(window.JSZip)return res(window.JSZip);let sc=document.createElement("script");sc.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";sc.onload=()=>res(window.JSZip);sc.onerror=()=>rej(new Error("Could not load the zip tool. Check the internet connection."));document.head.appendChild(sc)})}
+async function downloadDbImages(btn){return busy(btn,"Preparing…",async()=>{
+ let list=dbImageList();if(!list.length){toast("No images to download — they already use links.");return}
+ try{
+  let JSZip=await loadJSZip(),zip=new JSZip(),dir=zip.folder("images");
+  list.forEach(x=>dir.file(x.file,x.data.split(",")[1],{base64:true}));
+  let blob=await zip.generateAsync({type:"blob"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download="ambrosia-images.zip";document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  document.getElementById("imgMoveResult").innerHTML=`Downloaded <b>ambrosia-images.zip</b> with ${list.length} images. Next: upload the <b>images</b> folder to the store's GitHub (step 2).`;
+  toast(`✓ ${list.length} images downloaded`);
+ }catch(e){toast(e.message,"err")}
+});}
+function imageLoads(url){return new Promise(res=>{let im=new Image(),done=v=>{clearTimeout(tm);res(v)};let tm=setTimeout(()=>done(false),12000);im.onload=()=>done(im.naturalWidth>0);im.onerror=()=>done(false);im.src=url+(url.includes("?")?"&":"?")+"v="+Date.now()})}
+async function switchDbImages(btn){return busy(btn,"Checking…",async()=>{
+ let base=document.getElementById("imgBaseUrl").value.trim();if(!/^https?:\/\//.test(base)){toast("Enter the full address, starting with https://","err");return}
+ if(!base.endsWith("/"))base+="/";
+ let list=dbImageList();if(!list.length){toast("Nothing to switch — all images already use links.");return}
+ let ok=[],bad=[];
+ let res=await Promise.all(list.map(x=>imageLoads(base+x.file))); // check all at once
+ list.forEach((x,i)=>(res[i]?ok:bad).push(x));
+ if(!ok.length){document.getElementById("imgMoveResult").innerHTML=`<span style="color:#9a4435">None of the images could be found at <b>${esc(base)}</b>. Check that the <b>images</b> folder is uploaded to the store's GitHub and wait a few minutes, then try again.</span>`;return}
+ ok.forEach(x=>{
+  let url=base+x.file;
+  if(x.kind==="product"){let p=products.find(q=>String(q.id)===String(x.id));if(!p)return;if(x.index===0)p.img=url;else{p.gallery=p.gallery||[];p.gallery[x.index-1]=url}}
+  else{let c=collections.find(q=>String(q.id)===String(x.id));if(c)c.img=url}
+ });
+ try{
+  if(ok.some(x=>x.kind==="product"))await saveProducts();
+  if(ok.some(x=>x.kind==="collection"))await saveCollections();
+  logAction("Images moved to GitHub",`${ok.length} image(s) now load from ${base}${bad.length?` — ${bad.length} not found, left in the database`:""}`);
+  document.getElementById("imgMoveResult").innerHTML=`✓ <b>${ok.length}</b> image${ok.length>1?"s":""} switched to GitHub links.`+(bad.length?`<br><span style="color:#9a4435">${bad.length} not found yet (left unchanged): ${bad.map(x=>esc(x.file)).join(", ")}</span>`:"");
+  toast(`✓ ${ok.length} images moved out of the database`);renderImgMoveStatus();
+ }catch(e){toast("Save failed: "+e.message,"err")}
+});}
+window.downloadDbImages=downloadDbImages;window.switchDbImages=switchDbImages;
+
+function showTab(id,btn){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="settings")renderImgMoveStatus();document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
 function val(id){return document.getElementById(id).value}
 function setv(id,v){let e=document.getElementById(id);if(e)e.value=v??""}
 function loadContent(){db.ref("settings").once("value").then(s=>{let x={...defaultSettings,...(s.val()||{})};Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]));});}
-async function saveContent(btn){return busy(btn,"Saving…",async()=>{let x={};Object.keys(defaultSettings).forEach(k=>x[k]=val("s_"+k));let changed=Object.keys(x).filter(k=>String(x[k]??"")!==String(lastSettings[k]??""));try{await db.ref("settings").set(x);logAction("Store content saved",changed.length?changed.map(k=>`${k}: "${String(lastSettings[k]??"").slice(0,80)}" → "${String(x[k]).slice(0,80)}"`).join("; "):"no changes");toast("✓ Store content saved");}catch(e){toast("Save failed: "+e.message,"err");}});}
+async function saveContent(btn){return busy(btn,"Saving…",async()=>{let x={};Object.keys(defaultSettings).forEach(k=>x[k]=val("s_"+k));let before={...lastSettings};let changed=Object.keys(x).filter(k=>String(x[k]??"")!==String(before[k]??""));try{await db.ref("settings").set(x);logAction("Store content saved",changed.length?changed.map(k=>`${k}: "${String(before[k]??"").slice(0,80)}" → "${String(x[k]).slice(0,80)}"`).join("; "):"no changes");toast("✓ Store content saved");}catch(e){toast("Save failed: "+e.message,"err");}});}
 async function resetContent(){if(confirm("Reset all store content back to the defaults? This replaces what's live on the store.")){try{await db.ref("settings").set(defaultSettings);loadContent();logAction("Store content reset","All store text reset to defaults");toast("✓ Store content reset to defaults");}catch(e){toast("Reset failed: "+e.message,"err");}}}
 
 // Sign-in check runs last, after every variable above has been created.
