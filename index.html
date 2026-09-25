@@ -52,9 +52,11 @@ button:disabled{opacity:.55;cursor:default}
 @media print{
  body *{visibility:hidden}
  #invoicePrintArea,#invoicePrintArea *{visibility:visible}
- #invoicePrintArea{position:absolute;left:0;top:0;width:100%;box-shadow:none;max-height:none;overflow:visible}
+ #invoicePrintArea{position:absolute;left:0;top:0;width:100%;box-shadow:none;max-height:none;overflow:visible;box-sizing:border-box;padding:14mm 14mm 10mm!important;border-radius:0!important;max-width:none!important;width:100%!important;margin:0!important}
  .no-print{display:none!important}
 }
+/* no page margin = the browser has no room to print its own date / page title / web address / page number */
+@page{size:A4;margin:0}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
@@ -920,7 +922,13 @@ function viewInvoice(i){
  document.getElementById("invoiceOverlay").classList.add("open");
 }
 function closeInvoice(){document.getElementById("invoiceOverlay").classList.remove("open")}
-function printInvoice(){window.print()}
+function printInvoice(){
+ // the page title becomes the PDF file name ("Invoice AMB-260926-JXQ8.pdf")
+ let old=document.title,m=(document.getElementById("invoiceBody")||{}).innerText||"";m=m.match(/Order\s*#\s*([A-Z0-9-]+)/i);
+ document.title=m?"Invoice "+m[1]:"Invoice";
+ const back=()=>{document.title=old;window.removeEventListener("afterprint",back)};
+ window.addEventListener("afterprint",back);setTimeout(()=>window.print(),50);
+}
 window.viewInvoice=viewInvoice;window.closeInvoice=closeInvoice;window.printInvoice=printInvoice;
 // ---- New order alert: sound + notification + counter while this page is open ----
 let knownOrderKeys=null,newOrders=0,audioCtx=null;
