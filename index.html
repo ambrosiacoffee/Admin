@@ -269,6 +269,13 @@ button:disabled{opacity:.55;cursor:default}
     <input id="s_twitter" placeholder="https://x.com/ambrosiacoffee">
   </div>
 
+  <div class="panel">
+    <h3>💳 Card Payments (Ziina)</h3>
+    <p style="font-size:12px;color:#76695d">Shows <b>"Pay by Card / Apple Pay"</b> at checkout next to Cash on Delivery. Switch on only after the payment functions are deployed and a test payment worked. To try it before customers see it, open <b>ambrosiacoffee.store/?cardtest=1</b> on your phone.</p>
+    <label>Card payments at checkout</label>
+    <select id="s_cardpay"><option value="off">Off — Cash on Delivery only</option><option value="on">On — customers can pay by card</option></select>
+  </div>
+
   <div class="panel full">
     <h3>العربية — Arabic Text <span style="font-weight:400;font-size:13px;color:#8a7968">(optional)</span></h3>
     <p style="font-size:12px;color:#76695d">Shown when a customer switches the store to Arabic. Leave a box empty to use the Arabic text shown in grey (the built-in translation). Only fill in the ones you want to change.</p>
@@ -402,7 +409,7 @@ collectiontitle:"Our Coffee Collection",collectiondesc:"Choose your favourite st
 abouttitle:"Need help choosing your coffee?",abouttext:"Tell us how you brew your coffee and what flavour you like. We can help you choose the right Ambrosia beans.",helpbutton:"Ask For Help",
 deliverytitle:"Delivery",delivery:"Fast delivery across the UAE. Delivery charges are AED 30.00.",returnstitle:"Returns",returns:"Please contact us if your order arrives damaged or incorrect. We will review the issue and assist you.",
 email:"info@ambrosiacoffee.ae",whatsapp:"+971",uae:"UAE",footerbrand:"AMBROSIA SPECIALITY",footerdesc:"Freshly roasted coffee beans for homes, cafés and coffee lovers across the UAE.",copyright:"© 2026 Ambrosia Coffee Beans. All Rights Reserved.",
-facebook:"",instagram:"",tiktok:"",twitter:"",
+facebook:"",instagram:"",tiktok:"",twitter:"",cardpay:"off",
 topbar_ar:"",home_ar:"",shop_ar:"",collections_ar:"",coffee_ar:"",best_ar:"",aboutnav_ar:"",contactnav_ar:"",eyebrow_ar:"",herotitle_ar:"",herodesc_ar:"",herobutton_ar:"",storetitle_ar:"",storedesc_ar:"",collectiontitle_ar:"",collectiondesc_ar:"",abouttitle_ar:"",abouttext_ar:"",helpbutton_ar:"",uae_ar:"",footerdesc_ar:"",copyright_ar:""
 };
 
@@ -756,7 +763,7 @@ async function setOrderStatus(key,status){
  }catch(e){toast("Status update failed: "+e.message,"err");renderOrders();}
 }
 window.setOrderStatus=setOrderStatus;
-function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x);return `<tr><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}${x.lang==="ar"?` <span class="badge" title="Ordered using the Arabic store" style="padding:2px 7px;background:#dfe9e6;color:#23514b">AR</span>`:""}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
+function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x);return `<tr><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}${x.lang==="ar"?` <span class="badge" title="Ordered using the Arabic store" style="padding:2px 7px;background:#dfe9e6;color:#23514b">AR</span>`:""}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}<br>${payBadge(x)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
 function orderStockBack(o){
  let back=[];
  if(o&&o.stockDeducted&&o.stockTaken&&typeof o.stockTaken==="object"){
@@ -811,6 +818,34 @@ function viewCustomer(i){
 }
 function closeCustomerDetail(){document.getElementById("customerDetailOverlay").classList.remove("open");}
 
+// ---- Card payments (Ziina) ----
+const PAY_API="https://us-central1-ambrosiaweb.cloudfunctions.net";
+function payBadge(x){
+ if(x.paymentMethod!=="card")return `<span class="badge" style="padding:2px 8px;background:#efe6d8;color:#6d4b29">💵 COD</span>`;
+ let st=x.paymentStatus||"unpaid",p=x.payment||{},test=p.test?` <b style="color:#a3452f">TEST</b>`:"";
+ let map={paid:["#d8efdf","#1e6b3a","💳 PAID"],awaiting:["#f6e7c6","#7a4a12","💳 Awaiting payment"],unpaid:["#f6e7c6","#7a4a12","💳 Not paid yet"],failed:["#f6d9d3","#9a2f1f","💳 Payment failed"],canceled:["#f6d9d3","#9a2f1f","💳 Payment cancelled"]};
+ let [bg,fg,label]=map[st]||map.unpaid;
+ let card=st==="paid"&&p.cardLast4?` ····${esc(p.cardLast4)}`:"";
+ let btn=st==="paid"?"":` <button class="secondary" style="padding:3px 8px;font-size:11px;margin:4px 0 0" title="Ask Ziina for the latest status" onclick="checkPay('${esc(x.key)}',this)">🔄 Check</button>`;
+ return `<span class="badge" style="padding:2px 8px;background:${bg};color:${fg}" title="${esc(p.intentId||"")}${x.paymentError?" · "+esc(x.paymentError):""}">${label}${card}${test}</span>${btn}`;
+}
+async function checkPay(key,btn){
+ if(btn){btn.disabled=true;btn.textContent="…"}
+ try{
+  let r=await fetch(PAY_API+"/checkpayment",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderKey:key})});
+  let j={};try{j=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(j.error||("Error "+r.status));
+  toast(`${j.orderNo||"Order"}: payment ${j.paymentStatus==="paid"?"received ✓":j.paymentStatus}`,j.paymentStatus==="paid"?"ok":"err");
+ }catch(e){toast("Couldn't check payment: "+e.message,"err")}
+ finally{if(btn){btn.disabled=false;btn.textContent="🔄 Check"}}
+}
+window.checkPay=checkPay;
+function invoicePayment(o){
+ if(o.paymentMethod!=="card")return "Cash on Delivery";
+ let p=o.payment||{};
+ if(o.paymentStatus==="paid")return `Paid by card${p.cardBrand?" ("+esc(p.cardBrand)+(p.cardLast4?" ····"+esc(p.cardLast4):"")+")":""}${p.test?" — TEST":""}`;
+ return `Card — ${esc(o.paymentStatus||"not paid yet")}`;
+}
 function viewInvoice(i){
  let o=ordersData[i];if(!o)return;
  let c=o.customer||{};
@@ -854,7 +889,7 @@ function viewInvoice(i){
     </div>
     <div style="flex:1;border:1px solid #e4d0ad;border-radius:8px;padding:14px 16px">
      <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#a96d2e;font-weight:700;margin-bottom:6px;text-align:right">Payment</div>
-     <div style="font-size:13px;text-align:right">Cash on Delivery</div>
+     <div style="font-size:13px;text-align:right">${invoicePayment(o)}</div>
     </div>
    </div>
 
@@ -1084,7 +1119,7 @@ window.downloadDbImages=downloadDbImages;window.switchDbImages=switchDbImages;
 
 function showTab(id,btn){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="settings")renderImgMoveStatus();document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
 function val(id){return document.getElementById(id).value}
-function setv(id,v){let e=document.getElementById(id);if(e)e.value=v??""}
+function setv(id,v){let e=document.getElementById(id);if(e){e.value=v??"";if(e.tagName==="SELECT"&&e.selectedIndex<0)e.selectedIndex=0}}
 function loadContent(){db.ref("settings").once("value").then(s=>{let x={...defaultSettings,...(s.val()||{})};Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]));});}
 async function saveContent(btn){return busy(btn,"Saving…",async()=>{let x={};Object.keys(defaultSettings).forEach(k=>x[k]=val("s_"+k));let before={...lastSettings};let changed=Object.keys(x).filter(k=>String(x[k]??"")!==String(before[k]??""));try{await db.ref("settings").set(x);logAction("Store content saved",changed.length?changed.map(k=>`${k}: "${String(before[k]??"").slice(0,80)}" → "${String(x[k]).slice(0,80)}"`).join("; "):"no changes");toast("✓ Store content saved");}catch(e){toast("Save failed: "+e.message,"err");}});}
 async function resetContent(){if(confirm("Reset all store content back to the defaults? This replaces what's live on the store.")){try{await db.ref("settings").set(defaultSettings);loadContent();logAction("Store content reset","All store text reset to defaults");toast("✓ Store content reset to defaults");}catch(e){toast("Reset failed: "+e.message,"err");}}}
