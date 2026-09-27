@@ -1,7 +1,7 @@
 // Ambrosia Admin app — keeps the admin page on the phone so it opens instantly.
 // Only this site's own files are cached. Orders, products and payments always
 // come live from Firebase / the payment functions and are never stored here.
-const CACHE = "ambrosia-admin-v4";
+const CACHE = "ambrosia-admin-v6";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png", "/apple-touch-icon-180.png"];
 
 self.addEventListener("install", e => {
