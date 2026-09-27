@@ -1,0 +1,21 @@
+{
+  "name": "Ambrosia Admin",
+  "short_name": "Ambrosia",
+  "description": "Orders, products and customers for Ambrosia Speciality Coffee",
+  "id": "/?app=ambrosia-admin",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#133a4a",
+  "theme_color": "#f4eee5",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Orders", "url": "/?tab=orders", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Products", "url": "/?tab=products", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
+  ]
+}

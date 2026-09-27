@@ -2,11 +2,18 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Ambrosia — Admin</title>
 <meta name="robots" content="noindex, nofollow">
 <link rel="icon" href="favicon.ico" sizes="48x48">
-<link rel="icon" type="image/png" sizes="192x192" href="favicon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#f4eee5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ambrosia">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="apple-touch-icon-180.png">
 <style>
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#f4eee5;color:#30251d}
 button,input,select{font:inherit}button{cursor:pointer}
@@ -63,7 +70,53 @@ button:disabled{opacity:.55;cursor:default}
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-<style>.size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.size-grid input{width:100%;margin-top:6px}@media(max-width:700px){.size-grid{grid-template-columns:1fr}}</style><style>textarea{width:100%;min-height:70px;resize:vertical}#prating,#previewcount{width:48%;display:inline-block;margin-right:1%}</style></head>
+<style id="app-css">
+.bnav,.more-sheet,.install-tip{display:none}
+@media(max-width:760px){
+ html{-webkit-tap-highlight-color:transparent}
+ .top{position:sticky;top:0;z-index:40;padding:calc(10px + env(safe-area-inset-top)) 14px 10px!important}
+ .top h1{font-size:20px}
+ #adminWho{display:none}
+ .top .actions{gap:6px!important;flex-wrap:nowrap!important}
+ .top .actions button{padding:8px 11px;font-size:12px}
+ #alertBtn{max-width:44px;overflow:hidden;white-space:nowrap;text-overflow:clip}
+ main.wrap>.tabs{display:none}
+ main.wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+ .bnav{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(255,252,246,.94);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-top:1px solid #e6dccd;padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+ .bnav button{flex:1;background:none;border-radius:14px;padding:6px 2px 5px;display:flex;flex-direction:column;align-items:center;gap:2px;color:#8a7968;font-size:10.5px;font-weight:600;position:relative}
+ .bnav button .bi{font-size:21px;line-height:1.1;filter:grayscale(.6);opacity:.8}
+ .bnav button.on{color:#2b2119;background:#efe4d4}
+ .bnav button.on .bi{filter:none;opacity:1}
+ .bnav .bdot{position:absolute;top:2px;right:calc(50% - 20px);min-width:17px;height:17px;border-radius:9px;background:#8d3e32;color:#fff;font-size:10px;line-height:17px;padding:0 4px;display:none}
+ .more-sheet{position:fixed;inset:0;z-index:70;background:rgba(30,22,16,.35)}
+ .more-sheet.open{display:block}
+ .more-sheet .ms{position:absolute;left:0;right:0;bottom:0;background:#fbf8f2;border-radius:22px 22px 0 0;padding:10px 14px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -10px 40px rgba(0,0,0,.15)}
+ .more-sheet .ms:before{content:"";display:block;width:40px;height:5px;border-radius:3px;background:#dccfbe;margin:0 auto 12px}
+ .more-sheet .ms button{display:flex;width:100%;align-items:center;gap:12px;background:none;border-radius:12px;padding:13px 12px;font-size:15px;color:#30251d;text-align:left}
+ .more-sheet .ms button:active{background:#efe4d4}
+ .install-tip{display:block}
+ .top .actions a,.top .actions>button:last-child{display:none}
+ #alertBtn{font-size:0!important;width:40px;height:40px;padding:0!important;display:grid;place-items:center}
+ #alertBtn::before{content:"🔔";font-size:18px}
+ /* orders as cards instead of a wide table */
+ #ordersList table,#ordersList tbody{display:block;width:100%}
+ #ordersList tr:first-child{display:none}
+ #ordersList tr{display:grid;grid-template-columns:1fr auto;gap:3px 10px;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffdf9;margin-bottom:10px}
+ #ordersList td{display:block;border:0!important;padding:0!important}
+ #ordersList td[colspan]{grid-column:1/-1;border-radius:10px;padding:10px 12px!important}
+ #ordersList tr:has(td[colspan]){padding:0;border:0;background:none}
+ #ordersList td:nth-child(1){font-weight:700;font-size:14px}
+ #ordersList td:nth-child(2){grid-column:1;font-size:12px;color:#8a7968}
+ #ordersList td:nth-child(3){grid-column:1}
+ #ordersList td:nth-child(4){grid-column:2;grid-row:1/span 3;text-align:right;font-weight:700}
+ #ordersList td:nth-child(5){grid-column:1/-1;margin-top:8px}
+ #ordersList td:nth-child(5) select{width:100%!important}
+ #ordersList td:nth-child(6){grid-column:1/-1;display:flex;gap:8px}
+ #ordersList td:nth-child(6) button{flex:1;margin:0}
+ table{font-size:13px}
+}
+@media (display-mode:standalone){.install-app{display:none!important}}
+</style><style>.size-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.size-grid input{width:100%;margin-top:6px}@media(max-width:700px){.size-grid{grid-template-columns:1fr}}</style><style>textarea{width:100%;min-height:70px;resize:vertical}#prating,#previewcount{width:48%;display:inline-block;margin-right:1%}</style></head>
 <body>
 <div id="login" class="login">
   <div class="login-box">
@@ -89,6 +142,23 @@ button:disabled{opacity:.55;cursor:default}
 <button class="tab" onclick="showTab('activity',this)">Activity Log</button>
 <button class="tab" onclick="showTab('settings',this)">Settings</button>
 </div>
+<nav class="bnav" id="bnav" aria-label="Admin menu">
+ <button data-tab="orders" onclick="bnavGo('orders')"><span class="bi">🧾</span>Orders<span class="bdot" id="bnavOrders"></span></button>
+ <button data-tab="products" onclick="bnavGo('products')"><span class="bi">☕</span>Products</button>
+ <button data-tab="customers" onclick="bnavGo('customers')"><span class="bi">👥</span>Customers</button>
+ <button data-tab="messages" onclick="bnavGo('messages')"><span class="bi">💬</span>Messages<span class="bdot" id="bnavMsgs"></span></button>
+ <button data-tab="more" onclick="openMore()"><span class="bi">☰</span>More</button>
+</nav>
+<div class="more-sheet" id="moreSheet" onclick="if(event.target===this)closeMore()"><div class="ms">
+ <button onclick="bnavGo('collections')">🗂️ Collections</button>
+ <button onclick="bnavGo('content')">📝 Store Content</button>
+ <button onclick="bnavGo('promos')">🏷️ Promo Codes</button>
+ <button onclick="bnavGo('activity')">📜 Activity Log</button>
+ <button onclick="bnavGo('settings')">⚙️ Settings</button>
+ <button class="install-app" onclick="closeMore();installApp()">📲 Install as app</button>
+ <button onclick="closeMore();window.open('https://ambrosiacoffee.store/','_blank')">🛍️ Open Store</button>
+ <button onclick="logout()" style="color:#8d3e32">↩ Logout</button>
+</div></div>
 
 <section id="products" class="grid">
 <div class="panel">
@@ -573,8 +643,30 @@ async function onAdminAuth(u){
  adminUser=u;document.getElementById("adminWho").textContent=u.email||"";
  openApp();
 }
-function openApp(){if(appOpened)return;appOpened=true;setTimeout(updateAlertBtn,0);document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";renderProducts();renderCollections();renderOrders();renderCustomers();loadContent();subscribeFirebase();}
+function openApp(){if(appOpened)return;appOpened=true;setTimeout(updateAlertBtn,0);document.getElementById("login").style.display="none";document.getElementById("app").style.display="block";renderProducts();renderCollections();renderOrders();renderCustomers();loadContent();subscribeFirebase();try{startTab()}catch(e){}}
 function logout(){firebase.auth().signOut().then(()=>location.reload());}
+// ---- Phone app (installable) ----
+function tabBtn(id){return [...document.querySelectorAll(".tabs .tab")].find(b=>(b.getAttribute("onclick")||"").includes("'"+id+"'"))}
+function bnavGo(id){closeMore();let b=tabBtn(id);if(b){showTab(id,b);if(id==="orders")clearNewOrders()}}
+function openMore(){document.getElementById("moreSheet").classList.add("open")}
+function closeMore(){let m=document.getElementById("moreSheet");if(m)m.classList.remove("open")}
+window.bnavGo=bnavGo;window.openMore=openMore;window.closeMore=closeMore;
+let installEvt=null;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e});
+function isIOS(){return /iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1)}
+async function installApp(){
+ if(installEvt){installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;return}
+ if(isIOS())alert("To install on iPhone:\n\n1. Open ambrosiacoffee.site in Safari\n2. Tap the Share button ⬆️\n3. Tap \"Add to Home Screen\"\n4. Tap \"Add\"");
+ else alert("To install:\n\nOpen the browser menu ⋮ and tap \"Install app\" or \"Add to Home screen\".");
+}
+window.installApp=installApp;
+if("serviceWorker" in navigator)window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(()=>{})});
+if("serviceWorker" in navigator)navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.openTab)bnavGo(e.data.openTab)});
+function startTab(){
+ let want=new URLSearchParams(location.search).get("tab");
+ if(!want&&window.matchMedia("(max-width:760px)").matches)want="orders"; // on the phone, open straight to Orders
+ if(want&&tabBtn(want))bnavGo(want);else{let a=document.querySelector(".tabs .tab.active");if(a)showTab((a.getAttribute("onclick").match(/'(\w+)'/)||[])[1]||"products",a)}
+}
 
 function subscribeFirebase(){
  db.ref("products").on("value",s=>{productsLoaded=true;let v=s.val();products=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderProducts();});
@@ -1043,7 +1135,7 @@ async function enableOrderAlerts(){
  toast(("Notification" in window&&Notification.permission==="granted")?"✓ Alerts on — sound + notification for new orders":"✓ Sound alerts on (notifications were not allowed in this browser)");
 }
 window.enableOrderAlerts=enableOrderAlerts;
-function setTitleCount(){document.title=(newOrders?`(${newOrders}) `:"")+"Ambrosia — Admin";let c=document.getElementById("newOrderCount");if(c){c.textContent=newOrders+" new";c.style.display=newOrders?"inline-block":"none"}}
+function setTitleCount(){document.title=(newOrders?`(${newOrders}) `:"")+"Ambrosia — Admin";let c=document.getElementById("newOrderCount");if(c){c.textContent=newOrders+" new";c.style.display=newOrders?"inline-block":"none"}let d=document.getElementById("bnavOrders");if(d){d.textContent=newOrders;d.style.display=newOrders?"block":"none"}try{if(navigator.setAppBadge){newOrders?navigator.setAppBadge(newOrders):navigator.clearAppBadge()}}catch(e){}}
 function clearNewOrders(){newOrders=0;setTitleCount()}
 window.clearNewOrders=clearNewOrders;
 let knownPaid=null;
@@ -1063,7 +1155,8 @@ function checkNewOrders(v){
  toast("🛎️ "+msg);
  if(alertsOn()){
   chime();
-  try{if("Notification" in window&&Notification.permission==="granted"){let n=new Notification("🛎️ New Ambrosia order",{body:`${o.orderNo||""} · ${who} · AED ${money2(o.total)}`,tag:"order-"+fresh[0],icon:"favicon-192.png"});n.onclick=()=>{window.focus();let b=[...document.querySelectorAll(".tab")].find(x=>x.textContent.startsWith("Orders"));if(b){showTab("orders",b);clearNewOrders()}n.close()}}}catch(e){}
+  try{if("Notification" in window&&Notification.permission==="granted"&&navigator.serviceWorker&&navigator.serviceWorker.controller){navigator.serviceWorker.ready.then(r=>r.showNotification("🛎️ New Ambrosia order",{body:`${o.orderNo||""} · ${who} · AED ${money2(o.total)}`,tag:"order-"+fresh[0],icon:"icon-192.png",badge:"icon-192.png",vibrate:[200,100,200]}));}
+  else if("Notification" in window&&Notification.permission==="granted"){let n=new Notification("🛎️ New Ambrosia order",{body:`${o.orderNo||""} · ${who} · AED ${money2(o.total)}`,tag:"order-"+fresh[0],icon:"icon-192.png"});n.onclick=()=>{window.focus();let b=[...document.querySelectorAll(".tab")].find(x=>x.textContent.startsWith("Orders"));if(b){showTab("orders",b);clearNewOrders()}n.close()}}}catch(e){}
  }
 }
 window.addEventListener("focus",()=>{let s=document.getElementById("orders");if(s&&!s.classList.contains("hidden"))clearNewOrders()});
@@ -1117,7 +1210,7 @@ function renderMessages(){
  let box=document.getElementById("messagesList");if(!box||messagesRaw===null)return;
  let list=Object.entries(messagesRaw).reverse();
  let unread=list.filter(([,m])=>!m.read).length,c=document.getElementById("msgCount");
- if(c){c.textContent=unread;c.style.display=unread?"inline-block":"none";}
+ if(c){c.textContent=unread;c.style.display=unread?"inline-block":"none";}{let d=document.getElementById("bnavMsgs");if(d){d.textContent=unread;d.style.display=unread?"block":"none"}}
  box.innerHTML=list.length?list.map(([k,m])=>`<div class="product-row" style="grid-template-columns:1fr auto;${m.read?"":"background:#fff6e8;"}"><div><b>${esc(m.name)}</b> ${m.read?"":'<span class="badge">New</span>'}<br><span style="font-size:12px;color:#76695d">${esc(m.email)}${m.phone?" · "+esc(m.phone):""} · ${m.created?esc(new Date(m.created).toLocaleString()):""}</span><p style="white-space:pre-wrap;margin:8px 0 0">${esc(m.message)}</p></div><div class="actions">${m.read?"":`<button class="secondary" onclick="markMessageRead('${esc(k)}')">Mark read</button>`}<a href="mailto:${esc(m.email)}"><button class="secondary">Reply</button></a><button class="danger" onclick="delMessage('${esc(k)}')">Delete</button></div></div>`).join(""):"<p>No messages yet.</p>";
 }
 async function markMessageRead(k){try{await db.ref(`messages/${k}/read`).set(true);}catch(e){toast("Update failed: "+e.message,"err")}}
@@ -1218,7 +1311,7 @@ async function switchDbImages(btn){return busy(btn,"Checking…",async()=>{
 });}
 window.downloadDbImages=downloadDbImages;window.switchDbImages=switchDbImages;
 
-function showTab(id,btn){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="settings")renderImgMoveStatus();document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
+function showTab(id,btn){try{document.querySelectorAll("#bnav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===id||(b.dataset.tab==="more"&&!["orders","products","customers","messages"].includes(id))))}catch(e){};window.scrollTo(0,0);document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="settings")renderImgMoveStatus();document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
 function val(id){return document.getElementById(id).value}
 function setv(id,v){let e=document.getElementById(id);if(e){e.value=v??"";if(e.tagName==="SELECT"&&e.selectedIndex<0)e.selectedIndex=0}}
 function loadContent(){db.ref("settings").once("value").then(s=>{let x={...defaultSettings,...(s.val()||{})};Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]));});}
