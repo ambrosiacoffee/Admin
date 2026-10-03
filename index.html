@@ -251,8 +251,10 @@ button:disabled{opacity:.55;cursor:default}
 <label style="font-size:12px;color:#76695d;display:block;margin-top:6px">Words on the photo <span style="font-weight:400">(optional — type a single <b>-</b> to show no words)</span></label>
 <input id="coltag" placeholder="Tagline e.g. Real Classic">
 <input id="colsub" placeholder="Short line e.g. Wild origins. Exceptional flavour.">
+<input id="colnotes" placeholder="Tasting notes, separated by commas e.g. Chocolate, Hazelnut, Caramel (type - for none)">
 <input id="coltag_ar" dir="rtl" placeholder="الشعار بالعربية (اختياري)">
 <input id="colsub_ar" dir="rtl" placeholder="السطر القصير بالعربية (اختياري)">
+<input id="colnotes_ar" dir="rtl" placeholder="النكهات بالعربية، مفصولة بفواصل (اختياري)">
 <p style="font-size:12px;color:#76695d;margin:-4px 0 10px">Best photo: 1600 × 900, no words in the picture — the tagline is added by the store so it stays sharp and switches to Arabic.</p>
 <button class="primary" onclick="saveCollection(this)">Save Collection</button>
 <button class="secondary" onclick="clearCollectionForm()">Clear</button>
@@ -800,7 +802,7 @@ async function saveCollections(){if(!collectionsLoaded)throw new Error("collecti
 async function saveCollection(btn){return busy(btn,"Saving…",async()=>{
  let id=document.getElementById("colid").value||("col"+Date.now());
  let c={id:String(id),name:document.getElementById("colname").value.trim(),img:document.getElementById("colimg").value.trim(),link:document.getElementById("collink").value.trim()||"#store",name_ar:document.getElementById("colname_ar").value.trim()};
- ["tagline:coltag","subline:colsub","tagline_ar:coltag_ar","subline_ar:colsub_ar"].forEach(p=>{let [k,id]=p.split(":"),v=document.getElementById(id).value.trim();if(v)c[k]=v});
+ ["tagline:coltag","subline:colsub","tagline_ar:coltag_ar","subline_ar:colsub_ar","notes:colnotes","notes_ar:colnotes_ar"].forEach(p=>{let [k,id]=p.split(":"),v=document.getElementById(id).value.trim();if(v)c[k]=v});
  if(!c.name||!c.img)return alert("Collection name and image are required.");
  let i=collections.findIndex(x=>String(x.id)===String(id));
  let oldName=i>=0?collections[i].name:null;
@@ -828,6 +830,7 @@ function editCollection(id){
  document.getElementById("collink").value=c.link||"";
  document.getElementById("coltag").value=c.tagline||"";document.getElementById("colsub").value=c.subline||"";
  document.getElementById("coltag_ar").value=c.tagline_ar||"";document.getElementById("colsub_ar").value=c.subline_ar||"";
+ document.getElementById("colnotes").value=c.notes||"";document.getElementById("colnotes_ar").value=c.notes_ar||"";
  setImgPreview("colimg",c.img);
 }
 async function delCollection(id){
@@ -838,7 +841,7 @@ async function delCollection(id){
  if(String(document.getElementById("colid").value)===String(id))clearCollectionForm();
  try{await saveCollections();renderCollections();logAction("Collection deleted",`${c?c.name:id}${inUse?` (${inUse} products were in it)`:""}`);toast("✓ Collection deleted");}catch(e){toast("Delete failed: "+e.message,"err");}
 }
-function clearCollectionForm(){["colid","colname","colimg","collink","colname_ar","coltag","colsub","coltag_ar","colsub_ar"].forEach(x=>document.getElementById(x).value="");setImgPreview("colimg","");document.getElementById("colEditingNote").classList.remove("show");}
+function clearCollectionForm(){["colid","colname","colimg","collink","colname_ar","coltag","colsub","coltag_ar","colsub_ar","colnotes","colnotes_ar"].forEach(x=>document.getElementById(x).value="");setImgPreview("colimg","");document.getElementById("colEditingNote").classList.remove("show");}
 async function moveCollection(id,dir){
  let i=collections.findIndex(x=>String(x.id)===String(id));if(i<0)return;
  let j=i+dir;if(j<0||j>=collections.length)return;
