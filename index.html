@@ -227,10 +227,10 @@ button:disabled{opacity:.55;cursor:default}
 <div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Acidity</span><select id="pacid"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
 <div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Body</span><select id="pbody"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
 </div>
-<p style="font-size:12px;color:#76695d;margin:-4px 0 12px">Also used by the <b>Find your coffee</b> quiz to pick the right coffee.</p>
+
 <label style="font-size:13px;font-weight:600">☕ Best for — how should customers brew it?</label>
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px"><div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Espresso</span><select id="pbrew_espresso"><option value="">—</option><option value="1">✓ Good</option><option value="2">★ Best</option></select></div><div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Filter / V60</span><select id="pbrew_filter"><option value="">—</option><option value="1">✓ Good</option><option value="2">★ Best</option></select></div></div>
-<p style="font-size:12px;color:#76695d;margin:-4px 0 12px"><b>★ Best</b> = our top pick (you can give ★ to more than one, e.g. Espresso <i>and</i> Filter). <b>✓ Good</b> = works well. <b>—</b> = not shown. Customers can filter the shop by these, and the quiz uses them.</p>
+<p style="font-size:12px;color:#76695d;margin:-4px 0 12px"><b>★ Best</b> = our top pick (you can give ★ to more than one, e.g. Espresso <i>and</i> Filter). <b>✓ Good</b> = works well. <b>—</b> = not shown. Shown on the coffee card and product page.</p>
 <label style="font-size:13px;font-weight:600">🏷️ Limited lot — bags roasted</label>
 <input id="plot" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 20 (leave empty if not limited)">
 <p style="font-size:12px;color:#76695d;margin:-4px 0 0">Shows <b>"Only 20 bags roasted · 14 left"</b>. "Left" comes from the <b>Stock</b> boxes above, so set stock for each size too.</p>
@@ -437,13 +437,6 @@ button:disabled{opacity:.55;cursor:default}
   </div>
 
   <div class="panel">
-    <h3>☕ Find Your Coffee Quiz</h3>
-    <p style="font-size:12px;color:#76695d">3 quick questions on the home page that recommend a coffee. It uses each coffee's <b>flavour bars</b> and flavour line — fill them in for the best matches.</p>
-    <label>Quiz on the home page</label>
-    <select id="s_quiz"><option value="on">On</option><option value="off">Off</option></select>
-  </div>
-
-  <div class="panel">
     <h3>💳 Card Payments (Ziina)</h3>
     <p style="font-size:12px;color:#76695d">Shows <b>"Pay by Card / Apple Pay"</b> at checkout next to Cash on Delivery. Switch on only after the payment functions are deployed and a test payment worked. To try it before customers see it, open <b>ambrosiacoffee.store/?cardtest=1</b> on your phone.</p>
     <label>Card payments at checkout</label>
@@ -583,7 +576,7 @@ collectiontitle:"Our Coffee Collection",collectiondesc:"Choose your favourite st
 abouttitle:"Need help choosing your coffee?",abouttext:"Tell us how you brew your coffee and what flavour you like. We can help you choose the right Ambrosia beans.",helpbutton:"Ask For Help",
 deliverytitle:"Delivery",delivery:"Fast delivery across the UAE. Delivery charges are AED 30.00.",returnstitle:"Returns",returns:"Please contact us if your order arrives damaged or incorrect. We will review the issue and assist you.",
 email:"info@ambrosiacoffee.ae",whatsapp:"+971",uae:"UAE",footerbrand:"AMBROSIA SPECIALITY",footerdesc:"Freshly roasted coffee beans for homes, cafés and coffee lovers across the UAE.",copyright:"© 2026 Ambrosia Coffee Beans. All Rights Reserved.",
-facebook:"",instagram:"",tiktok:"",twitter:"",cardpay:"off",deliveryCharge:30,giftMin:0,quiz:"on",originGroups:"on",originOrder:"",originLines:"",homeOrder:"",
+facebook:"",instagram:"",tiktok:"",twitter:"",cardpay:"off",deliveryCharge:30,giftMin:0,originGroups:"on",originOrder:"",originLines:"",homeOrder:"",
 topbar_ar:"",home_ar:"",shop_ar:"",collections_ar:"",coffee_ar:"",best_ar:"",aboutnav_ar:"",contactnav_ar:"",eyebrow_ar:"",herotitle_ar:"",herodesc_ar:"",herobutton_ar:"",storetitle_ar:"",storedesc_ar:"",collectiontitle_ar:"",collectiondesc_ar:"",abouttitle_ar:"",abouttext_ar:"",helpbutton_ar:"",uae_ar:"",footerdesc_ar:"",copyright_ar:""
 };
 
