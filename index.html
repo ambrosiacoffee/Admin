@@ -228,6 +228,9 @@ button:disabled{opacity:.55;cursor:default}
 <div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Body</span><select id="pbody"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
 </div>
 <p style="font-size:12px;color:#76695d;margin:-4px 0 12px">Also used by the <b>Find your coffee</b> quiz to pick the right coffee.</p>
+<label style="font-size:13px;font-weight:600">☕ Best for — how should customers brew it?</label>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px"><div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Espresso</span><select id="pbrew_espresso"><option value="">—</option><option value="1">✓ Good</option><option value="2">★ Best</option></select></div><div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Filter / V60</span><select id="pbrew_filter"><option value="">—</option><option value="1">✓ Good</option><option value="2">★ Best</option></select></div></div>
+<p style="font-size:12px;color:#76695d;margin:-4px 0 12px"><b>★ Best</b> = our top pick (you can give ★ to more than one, e.g. Espresso <i>and</i> Filter). <b>✓ Good</b> = works well. <b>—</b> = not shown. Customers can filter the shop by these, and the quiz uses them.</p>
 <label style="font-size:13px;font-weight:600">🏷️ Limited lot — bags roasted</label>
 <input id="plot" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 20 (leave empty if not limited)">
 <p style="font-size:12px;color:#76695d;margin:-4px 0 0">Shows <b>"Only 20 bags roasted · 14 left"</b>. "Left" comes from the <b>Stock</b> boxes above, so set stock for each size too.</p>
@@ -411,6 +414,22 @@ button:disabled{opacity:.55;cursor:default}
   </div>
 
   <div class="panel">
+    <h3>🏠 Home Page Order</h3>
+    <p style="font-size:12px;color:#76695d">Choose what customers see first on the home page, under the big top picture. Use <b>↑ ↓</b>, then press <b>Save</b> at the bottom. <i>Best Sellers</i> and <i>New Arrivals</i> only show when they have coffees.</p>
+    <input type="hidden" id="s_homeOrder">
+    <div id="homeOrderList"></div>
+  </div>
+
+  <div class="panel">
+    <h3>🌍 Coffee by Country</h3>
+    <p style="font-size:12px;color:#76695d">The shop shows coffees in groups — <b>Brazil</b>, <b>Colombia</b>, <b>Ethiopia</b>… The country comes from the <b>Origin:</b> line in each product's description. Use <b>↑ ↓</b> to choose which country comes first. The short line under the name is optional — leave it empty to use our ready line (shown in grey). Coffees inside each country follow the product order (↑ ↓ on the Products tab). Press <b>Save</b> at the bottom.</p>
+    <label>Group coffees by country</label>
+    <select id="s_originGroups"><option value="on">On</option><option value="off">Off — one list</option></select>
+    <input type="hidden" id="s_originOrder"><input type="hidden" id="s_originLines">
+    <div id="originList" style="margin-top:12px"></div>
+  </div>
+
+  <div class="panel">
     <h3>🎁 Free Gift</h3>
     <p style="font-size:12px;color:#76695d">When the coffee in an order (after any promo discount, before delivery) reaches this amount, the customer picks <b>one free coffee</b> — any coffee, <b>200g or 250g</b>. The cart shows a progress bar. The gift is taken from stock and shows on the order and invoice as <b>FREE</b>. <b>0</b> = switched off.</p>
     <label>Free gift from (AED)</label>
@@ -564,7 +583,7 @@ collectiontitle:"Our Coffee Collection",collectiondesc:"Choose your favourite st
 abouttitle:"Need help choosing your coffee?",abouttext:"Tell us how you brew your coffee and what flavour you like. We can help you choose the right Ambrosia beans.",helpbutton:"Ask For Help",
 deliverytitle:"Delivery",delivery:"Fast delivery across the UAE. Delivery charges are AED 30.00.",returnstitle:"Returns",returns:"Please contact us if your order arrives damaged or incorrect. We will review the issue and assist you.",
 email:"info@ambrosiacoffee.ae",whatsapp:"+971",uae:"UAE",footerbrand:"AMBROSIA SPECIALITY",footerdesc:"Freshly roasted coffee beans for homes, cafés and coffee lovers across the UAE.",copyright:"© 2026 Ambrosia Coffee Beans. All Rights Reserved.",
-facebook:"",instagram:"",tiktok:"",twitter:"",cardpay:"off",deliveryCharge:30,giftMin:0,quiz:"on",
+facebook:"",instagram:"",tiktok:"",twitter:"",cardpay:"off",deliveryCharge:30,giftMin:0,quiz:"on",originGroups:"on",originOrder:"",originLines:"",homeOrder:"",
 topbar_ar:"",home_ar:"",shop_ar:"",collections_ar:"",coffee_ar:"",best_ar:"",aboutnav_ar:"",contactnav_ar:"",eyebrow_ar:"",herotitle_ar:"",herodesc_ar:"",herobutton_ar:"",storetitle_ar:"",storedesc_ar:"",collectiontitle_ar:"",collectiondesc_ar:"",abouttitle_ar:"",abouttext_ar:"",helpbutton_ar:"",uae_ar:"",footerdesc_ar:"",copyright_ar:""
 };
 
@@ -593,6 +612,7 @@ function describeProductChanges(a,b){
  });
  if([a.img,...(a.gallery||[])].join("|")!==[b.img,...(b.gallery||[])].join("|"))out.push("images changed");
  ["description","tastingNotes","brewingGuide","tastingShort","origin","roastDate","sweet","acid","body","lotSize"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push(f+" changed")});
+ if(JSON.stringify(a.brew||{})!==JSON.stringify(b.brew||{}))out.push("best for changed");
  if((a.name_ar||"")!==(b.name_ar||""))out.push(`Arabic name "${a.name_ar||"-"}" → "${b.name_ar||"-"}"`);
  ["tastingShort_ar","description_ar","tastingNotes_ar","brewingGuide_ar"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push("Arabic "+f.replace("_ar","")+" changed")});
  if(Number(a.rating||5)!==Number(b.rating||5))out.push(`rating ${a.rating||5} → ${b.rating||5}`);
@@ -742,7 +762,7 @@ function startTab(){
 }
 
 function subscribeFirebase(){
- db.ref("products").on("value",s=>{productsLoaded=true;let v=s.val();products=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderProducts();});
+ db.ref("products").on("value",s=>{productsLoaded=true;let v=s.val();products=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderProducts();try{renderOriginUI()}catch(e){}});
  db.ref("collections").on("value",s=>{collectionsLoaded=true;let v=s.val();collections=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);renderCollections();});
  db.ref("orders").on("value",s=>{let v=s.val()||{};checkNewOrders(v);ordersRaw=v;renderOrders();renderCustomers();renderPromos();setTimeout(autoCheckPayments,500);});
  db.ref("stock").on("value",s=>{stockData=s.val()||{};renderProducts();});
@@ -750,7 +770,7 @@ function subscribeFirebase(){
  db.ref("messages").on("value",s=>{messagesRaw=s.val()||{};renderMessages();},e=>console.error(e));
  db.ref("auditLog").limitToLast(300).on("value",s=>{activityRaw=s.val()||{};renderActivity();},e=>{document.getElementById("activityList").innerHTML=`<p style="color:#9a4435">Couldn't load the activity log: ${esc(e.message)}</p>`});
  db.ref("stockReturns").on("value",s=>{stockReturnsRaw=s.val()||{};renderStockReturns();},e=>console.error(e));
- db.ref("settings").on("value",s=>{lastSettings={...defaultSettings,...(s.val()||{})};{let e=document.getElementById("dcNow");if(e)e.textContent=money2(lastSettings.deliveryCharge)}if(s.val()){let x=s.val();Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]??defaultSettings[k]));}});
+ db.ref("settings").on("value",s=>{lastSettings={...defaultSettings,...(s.val()||{})};{let e=document.getElementById("dcNow");if(e)e.textContent=money2(lastSettings.deliveryCharge)}if(s.val()){let x=s.val();Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]??defaultSettings[k]));try{renderOriginUI();renderHomeOrderUI()}catch(e){}}});
 }
 // Saving writes the WHOLE list, so doing it before the list has loaded would
 // replace every product with just the one being saved. Block that.
@@ -769,7 +789,8 @@ rating:+document.getElementById("prating").value||5,reviewCount:+document.getEle
 name_ar:document.getElementById("pname_ar").value.trim(),tastingShort_ar:document.getElementById("ptasting_ar").value.trim(),description_ar:document.getElementById("pdescription_ar").value.trim(),tastingNotes_ar:document.getElementById("ptastingnotes_ar").value.trim(),brewingGuide_ar:document.getElementById("pbrewing_ar").value.trim()};
  {let rd=document.getElementById("proast").value;if(/^\d{4}-\d{2}-\d{2}$/.test(rd))p.roastDate=rd;
   [["psweet","sweet"],["pacid","acid"],["pbody","body"]].forEach(([el,f])=>{let v=Math.round(Number(document.getElementById(el).value)||0);if(v>=1&&v<=5)p[f]=v});
-  let lot=Math.floor(Number(document.getElementById("plot").value)||0);if(lot>0)p.lotSize=lot;}
+  let lot=Math.floor(Number(document.getElementById("plot").value)||0);if(lot>0)p.lotSize=lot;
+  let br={};["espresso","filter"].forEach(k=>{let v=Number(document.getElementById("pbrew_"+k).value)||0;if(v===1||v===2)br[k]=v});if(Object.keys(br).length)p.brew=br;}
  if(!p.name||!basePrice)return alert("Product name and at least one enabled pack size price are required.");
  let i=products.findIndex(x=>String(x.id)===String(id));let before=i>=0?JSON.parse(JSON.stringify(products[i])):null;if(i>=0)products[i]=p;else products.push(p);
  try{
@@ -811,6 +832,7 @@ function edit(id){
 document.getElementById("prating").value=p.rating??5;document.getElementById("previewcount").value=p.reviewCount??p.reviews??0;document.getElementById("ptasting").value=p.tastingShort||p.shortDescription||"";document.getElementById("pdescription").value=p.description||"";document.getElementById("ptastingnotes").value=p.tastingNotes||"";document.getElementById("pbrewing").value=p.brewingGuide||"";document.getElementById("porigin").value=p.origin||"";
  [["pname_ar","name_ar"],["ptasting_ar","tastingShort_ar"],["pdescription_ar","description_ar"],["ptastingnotes_ar","tastingNotes_ar"],["pbrewing_ar","brewingGuide_ar"]].forEach(([el,f])=>document.getElementById(el).value=p[f]||"");
  [["proast","roastDate"],["psweet","sweet"],["pacid","acid"],["pbody","body"],["plot","lotSize"]].forEach(([el,f])=>document.getElementById(el).value=p[f]??"");
+ ["espresso","filter"].forEach(k=>{let v=p.brew&&Number(p.brew[k]);document.getElementById("pbrew_"+k).value=(v===1||v===2)?String(v):""});
  document.getElementById("parBox").open=!!(p.name_ar||p.tastingShort_ar||p.description_ar||p.tastingNotes_ar||p.brewingGuide_ar);
  let s=p.sizes||{};
  [["g200","size200"],["g250","size250"],["kg1","size1kg"]].forEach(([k,pre])=>{let x=s[k]||{};document.getElementById(pre+"_enabled").checked=x.enabled!==false;document.getElementById(pre+"_price").value=x.price||"";document.getElementById(pre+"_old").value=x.old||""});
@@ -833,7 +855,7 @@ async function moveProduct(id,dir){
  renderProducts();
  try{await saveProducts();logAction("Products reordered",`${products[j].name} moved ${dir<0?"up":"down"}`);toast("✓ Product order saved");}catch(e){toast("Save failed: "+e.message,"err");}
 }
-function clearForm(){["pid","pname","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin","pname_ar","ptasting_ar","pdescription_ar","ptastingnotes_ar","pbrewing_ar","proast","psweet","pacid","pbody","plot"].forEach(x=>document.getElementById(x).value="");document.getElementById("parBox").open=false;["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);["pimg1","pimg2","pimg3"].forEach(x=>setImgPreview(x,""));SIZE_KEYS.forEach(([,,pre])=>{let el=document.getElementById(pre+"_stock");el.value="";el.dataset.loaded="";});document.getElementById("editingNote").classList.remove("show");document.getElementById("saveProductBtn").textContent="Save Product";}
+function clearForm(){["pid","pname","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin","pname_ar","ptasting_ar","pdescription_ar","ptastingnotes_ar","pbrewing_ar","proast","psweet","pacid","pbody","plot","pbrew_espresso","pbrew_filter"].forEach(x=>document.getElementById(x).value="");document.getElementById("parBox").open=false;["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);["pimg1","pimg2","pimg3"].forEach(x=>setImgPreview(x,""));SIZE_KEYS.forEach(([,,pre])=>{let el=document.getElementById(pre+"_stock");el.value="";el.dataset.loaded="";});document.getElementById("editingNote").classList.remove("show");document.getElementById("saveProductBtn").textContent="Save Product";}
 
 async function saveCollections(){if(!collectionsLoaded)throw new Error("collections are still loading — wait a moment and try again");await db.ref("collections").set(collections);}
 async function saveCollection(btn){return busy(btn,"Saving…",async()=>{
@@ -950,7 +972,7 @@ async function setOrderStatus(key,status){
  }catch(e){toast("Status update failed: "+e.message,"err");renderOrders();}
 }
 window.setOrderStatus=setOrderStatus;
-function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));ordersData=ordersData.filter(x=>!cardWaiting(x)).concat(ordersData.filter(cardWaiting));let waitHead=false;document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x),w=cardWaiting(x),head="";if(w&&!waitHead){waitHead=true;head=`<tr><td colspan="6" style="background:#f6efe3;color:#7a4a12;font-size:13px;padding:10px 12px"><b>⏳ Card orders waiting for payment</b> — don't send these yet. They move up automatically when the customer pays.</td></tr>`}return head+`<tr${w?` style="opacity:.55"`:""}><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}${x.lang==="ar"?` <span class="badge" title="Ordered using the Arabic store" style="padding:2px 7px;background:#dfe9e6;color:#23514b">AR</span>`:""}${x.gift?` <span class="badge" title="Free gift: ${esc((x.gift.name||"")+" "+(x.gift.size||""))}" style="padding:2px 7px;background:#e3f1e7;color:#24543b">🎁 +free ${esc(x.gift.size||"")}</span>`:""}${x.giftOrder?` <span class="badge" title="${esc(x.giftMessage?"Gift message: "+x.giftMessage:"Gift order — no prices in the box")}" style="padding:2px 7px;background:#f6e6ee;color:#7a2f55">🎁 Gift</span>`:""}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}<br>${payBadge(x)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
+function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));ordersData=ordersData.filter(x=>!cardWaiting(x)).concat(ordersData.filter(cardWaiting));let waitHead=false;document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x),w=cardWaiting(x),head="";if(w&&!waitHead){waitHead=true;head=`<tr><td colspan="6" style="background:#f6efe3;color:#7a4a12;font-size:13px;padding:10px 12px"><b>⏳ Card orders waiting for payment</b> — don't send these yet. They move up automatically when the customer pays.</td></tr>`}return head+`<tr${w?` style="opacity:.55"`:""}><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}${x.lang==="ar"?` <span class="badge" title="Ordered using the Arabic store" style="padding:2px 7px;background:#dfe9e6;color:#23514b">AR</span>`:""}${x.gift?` <span class="badge" title="Free gift: ${esc((x.gift.name||"")+" "+(x.gift.size||""))}" style="padding:2px 7px;background:#e3f1e7;color:#24543b">🎁 +free ${esc(x.gift.size||"")}</span>`:""}${x.giftOrder?` <span class="badge" title="${esc(x.giftMessage?"Gift message: "+x.giftMessage:"Gift order — no prices in the box")}" style="padding:2px 7px;background:#f6e6ee;color:#7a2f55">🎁 Gift</span> <button type="button" class="secondary" style="padding:3px 9px;font-size:11.5px;min-height:0" onclick="printGiftCard(${i})">🖨️ Card</button>`:""}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}<br>${payBadge(x)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
 function orderStockBack(o){
  let back=[];
  if(o&&o.stockDeducted&&o.stockTaken&&typeof o.stockTaken==="object"){
@@ -1111,7 +1133,7 @@ function viewInvoice(i){
    <td style="padding:14px 8px;border-bottom:1px solid ${line};text-align:right;vertical-align:top;font-size:13px;color:#2c7a3c">FREE</td>
    <td style="padding:14px 0 14px 8px;border-bottom:1px solid ${line};text-align:right;vertical-align:top;font-size:13px;font-weight:600;color:#2c7a3c">0.00</td>
   </tr>`;
- let giftBox=o.giftOrder?`<div style="margin:0 0 20px;border:1.5px dashed #9cbab4;background:#f3faf8;border-radius:12px;padding:12px 16px"><div style="${cap};color:#2f5d57">🎁 Gift order — don't put prices in the box</div>${o.giftMessage?`<div style="font-family:Georgia,serif;font-style:italic;font-size:15px;margin-top:8px;color:#2f4744">"${esc(o.giftMessage)}"</div>`:""}</div>`:"";
+ let giftBox=o.giftOrder?`<div style="margin:0 0 20px;border:1.5px dashed #9cbab4;background:#f3faf8;border-radius:12px;padding:12px 16px"><div style="${cap};color:#2f5d57">🎁 Gift order — don't put prices in the box</div>${o.giftTo?`<div style="font-size:13px;margin-top:8px;color:#2f4744"><b>To:</b> ${esc(o.giftTo)}</div>`:""}${o.giftMessage?`<div style="font-family:Georgia,serif;font-style:italic;font-size:15px;margin-top:8px;color:#2f4744">"${esc(o.giftMessage)}"</div>`:""}${o.giftFrom?`<div style="font-size:13px;margin-top:6px;color:#2f4744"><b>From:</b> ${esc(o.giftFrom)}</div>`:""}<button type="button" class="primary no-print" style="margin-top:12px" onclick="printGiftCard(${i})">🖨️ Print gift card</button></div>`:"";
  let tl=(label,val,extra="")=>`<tr><td style="padding:6px 0;color:${muted};font-size:12.5px">${label}</td><td style="padding:6px 0;text-align:right;font-size:13px;white-space:nowrap;${extra}">${val}</td></tr>`;
  let iss=orderPriceIssues(o);
  document.getElementById("invoiceBody").innerHTML=(iss.length?`<div class="no-print" style="background:#f3d9a4;color:#7a4a12;border-radius:12px;padding:10px 14px;margin:0 40px 14px 0;font-size:13px"><b>⚠ Please check this order's prices:</b><br>${iss.map(esc).join("<br>")}</div>`:"")+`
@@ -1198,6 +1220,30 @@ function printInvoice(){
  window.addEventListener("afterprint",back);setTimeout(()=>window.print(),50);
 }
 window.viewInvoice=viewInvoice;window.closeInvoice=closeInvoice;window.printInvoice=printInvoice;
+// ---- Gift card: an ivory A6 card to print and put in the box (no prices) ----
+function printGiftCard(i){
+ let o=ordersData[i];if(!o)return;
+ let ar=o.lang==="ar",to=o.giftTo||"",msg=o.giftMessage||"",from=o.giftFrom||"";
+ let h=x=>String(x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ let html=`<!DOCTYPE html><html lang="${ar?"ar":"en"}" dir="${ar?"rtl":"ltr"}"><head><meta charset="utf-8"><title>Gift card ${h(o.orderNo||"")}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:ital@0;1&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap">
+<style>@page{size:148mm 105mm;margin:0}*{box-sizing:border-box;margin:0}html,body{width:148mm;height:105mm;background:#0f4744;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{display:flex;align-items:center;justify-content:center;font-family:${ar?"Amiri,serif":"'Cormorant Garamond',Georgia,serif"};color:#f3e6cf}
+.c{width:148mm;height:105mm;display:flex;flex-direction:column;justify-content:center;padding:10mm 14mm;background:linear-gradient(150deg,#0f4744,#17605a)}
+.lg{font:600 19pt 'Cormorant Garamond',Georgia,serif;letter-spacing:7pt;padding-left:7pt;color:#e7c58a;text-align:center}.ls{font:500 6pt Arial,sans-serif;letter-spacing:3pt;color:#cbb48a;margin:1mm 0 7mm;text-align:center}
+.to{font-style:italic;font-size:14pt;color:#e7c58a}.m{font-style:italic;font-size:${msg.length>90?15:18}pt;line-height:1.4;margin:3mm 0 4mm;word-wrap:break-word}.fr{font-style:italic;font-size:13pt;color:#e7c58a;text-align:${ar?"left":"right"}}
+.o{height:.3mm;background:linear-gradient(90deg,transparent,#d7ad72,transparent);margin:6mm 0 3mm}
+.bt{font:500 6.5pt Arial,sans-serif;letter-spacing:.6pt;color:#a9c7c2;text-align:center}
+${ar?".lg,.ls,.bt{letter-spacing:0}.to,.m,.fr{font-style:normal}":""}</style></head><body><div class="c">
+<div class="lg">AMBROSIA</div><div class="ls">${ar?"أمبروزيا للقهوة المختصة":"SPECIALITY COFFEE"}</div>
+${to?`<div class="to">${ar?`عزيزي/عزيزتي ${h(to)}،`:`Dear ${h(to)},`}</div>`:""}<div class="m">${h(msg)||"&nbsp;"}</div>${from?`<div class="fr">— ${h(from)}</div>`:""}
+<div class="o"></div><div class="bt">${ar?"هدية من أمبروزيا للقهوة المختصة":"A gift from Ambrosia Speciality Coffee"} · ambrosiacoffee.store</div></div>
+<script>(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(()=>window.print(),300))<\/script></body></html>`;
+ let w=window.open("","_blank");
+ if(!w){toast("Allow pop-ups to print the gift card");return}
+ w.document.open();w.document.write(html);w.document.close();
+}
+window.printGiftCard=printGiftCard;
 // ---- New order alert: sound + notification + counter while this page is open ----
 let knownOrderKeys=null,newOrders=0,audioCtx=null;
 function unlockAudio(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==="suspended")audioCtx.resume()}catch(e){}}
@@ -1404,7 +1450,30 @@ window.downloadDbImages=downloadDbImages;window.switchDbImages=switchDbImages;
 function showTab(id,btn){try{document.querySelectorAll("#bnav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===id||(b.dataset.tab==="more"&&!["orders","products","customers","messages"].includes(id))))}catch(e){};window.scrollTo(0,0);document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));document.getElementById(id).classList.remove("hidden");if(id==="settings")renderImgMoveStatus();document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));btn.classList.add("active");}
 function val(id){return document.getElementById(id).value}
 function setv(id,v){let e=document.getElementById(id);if(e){e.value=v??"";if(e.tagName==="SELECT"&&e.selectedIndex<0)e.selectedIndex=0}}
-function loadContent(){db.ref("settings").once("value").then(s=>{let x={...defaultSettings,...(s.val()||{})};Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]));});}
+// ---- Coffee by Country ----
+const ORIGIN_DEFAULT_LINE={brazil:"Smooth, chocolatey & nutty · perfect with milk",colombia:"Fruity co-ferments · sweet, juicy & fun",ethiopia:"Floral, bright & elegant",kenya:"Juicy, bright & vibrant",rwanda:"Juicy, bright & vibrant",burundi:"Juicy, bright & vibrant",panama:"Floral, bright & elegant","costa rica":"Sweet, balanced & smooth",guatemala:"Sweet, balanced & smooth",honduras:"Sweet, balanced & smooth","el salvador":"Sweet, balanced & smooth",peru:"Sweet, balanced & smooth",nicaragua:"Sweet, balanced & smooth",mexico:"Sweet, balanced & smooth",yemen:"Rich, bold & spicy",indonesia:"Rich, bold & spicy",india:"Rich, bold & spicy"};
+function adminCountry(p){let d=String(p&&p.description||"");let m=d.match(/^\s*(?:Origin|Country)\s*:\s*(.+)$/mi);let o=(m?m[1]:"")||(p&&p.origin)||"";let parts=String(o).split(",").map(x=>x.trim()).filter(Boolean);return parts.length?parts[parts.length-1]:""}
+function originLinesObj(){try{let o=JSON.parse(document.getElementById("s_originLines").value||"{}");return o&&typeof o==="object"?o:{}}catch(e){return {}}}
+function originCountries(){let saved=String(document.getElementById("s_originOrder").value||"").split("|").map(x=>x.trim()).filter(Boolean);let found=[];(products||[]).slice().sort((a,b)=>(Number(a.order)||0)-(Number(b.order)||0)).forEach(p=>{let c=adminCountry(p);if(c&&!found.includes(c))found.push(c)});return saved.filter(c=>found.includes(c)).concat(found.filter(c=>!saved.includes(c)))}
+function renderOriginUI(){let box=document.getElementById("originList");if(!box)return;let list=originCountries(),L=originLinesObj();
+ if(!list.length){box.innerHTML='<div style="font-size:12.5px;color:#9a8a78">No countries yet — add a line like <b>Origin: Brazil</b> to a product description.</div>';return}
+ let cnt=c=>(products||[]).filter(p=>adminCountry(p)===c).length;
+ box.innerHTML=list.map((c,i)=>{let l=L[c]||{};let def=ORIGIN_DEFAULT_LINE[c.toLowerCase()]||"Short line (optional)";let n=cnt(c);return `<div style="border:1px solid #eadfce;border-radius:12px;padding:10px 12px;margin-bottom:8px;background:#fffdf9">
+ <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><b style="font-size:15px;flex:1">${i+1}. ${esc(c)} <span style="font-weight:400;color:#9a8a78;font-size:12px">· ${n} coffee${n===1?"":"s"}</span></b>
+ <button type="button" class="secondary" style="padding:4px 12px;min-height:0" ${i?"":"disabled"} onclick="moveOrigin(${i},-1)">↑</button><button type="button" class="secondary" style="padding:4px 12px;min-height:0" ${i<list.length-1?"":"disabled"} onclick="moveOrigin(${i},1)">↓</button></div>
+ <input type="text" maxlength="80" placeholder="${esc(def)}" value="${esc(l.en||"")}" oninput="setOriginLine(${i},'en',this.value)" style="margin-bottom:6px">
+ <input type="text" maxlength="80" dir="rtl" placeholder="السطر بالعربية (اختياري)" value="${esc(l.ar||"")}" oninput="setOriginLine(${i},'ar',this.value)"></div>`}).join("");
+ document.getElementById("s_originOrder").value=list.join("|");}
+function moveOrigin(i,d){let list=originCountries();let j=i+d;if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];document.getElementById("s_originOrder").value=list.join("|");renderOriginUI()}
+function setOriginLine(i,lang,v){let c=originCountries()[i];if(!c)return;let L=originLinesObj();L[c]=L[c]||{};L[c][lang]=String(v).slice(0,80);if(!L[c].en&&!L[c].ar)delete L[c];document.getElementById("s_originLines").value=Object.keys(L).length?JSON.stringify(L):""}
+const HOME_PARTS=[["features","✨ Badges — Premium Quality · Freshly Roasted · Fast Delivery · Satisfaction"],["collections","🗂️ Our Coffee Collection"],["store","☕ Featured Coffee (all coffees)"],["best-sellers","🏆 Best Sellers"],["new-arrivals","🆕 New Arrivals"],["help","💬 Need help choosing your coffee?"]];
+function homeOrderList(){let keys=HOME_PARTS.map(x=>x[0]);let saved=String(document.getElementById("s_homeOrder").value||"").split("|").filter(k=>keys.includes(k));return saved.concat(keys.filter(k=>!saved.includes(k)))}
+function renderHomeOrderUI(){let box=document.getElementById("homeOrderList");if(!box)return;let list=homeOrderList();let lab=k=>(HOME_PARTS.find(x=>x[0]===k)||[k,k])[1];
+ box.innerHTML=list.map((k,i)=>`<div style="display:flex;align-items:center;gap:8px;border:1px solid #eadfce;border-radius:12px;padding:9px 12px;margin-bottom:7px;background:#fffdf9"><b style="flex:1;font-size:14px">${i+1}. ${esc(lab(k))}</b><button type="button" class="secondary" style="padding:4px 12px;min-height:0" ${i?"":"disabled"} onclick="moveHome(${i},-1)">↑</button><button type="button" class="secondary" style="padding:4px 12px;min-height:0" ${i<list.length-1?"":"disabled"} onclick="moveHome(${i},1)">↓</button></div>`).join("")}
+function moveHome(i,d){let list=homeOrderList();let j=i+d;if(j<0||j>=list.length)return;[list[i],list[j]]=[list[j],list[i]];document.getElementById("s_homeOrder").value=list.join("|");renderHomeOrderUI()}
+window.moveHome=moveHome;window.renderHomeOrderUI=renderHomeOrderUI;
+window.moveOrigin=moveOrigin;window.setOriginLine=setOriginLine;window.renderOriginUI=renderOriginUI;
+function loadContent(){db.ref("settings").once("value").then(s=>{let x={...defaultSettings,...(s.val()||{})};Object.keys(defaultSettings).forEach(k=>setv("s_"+k,x[k]));try{renderOriginUI();renderHomeOrderUI()}catch(e){}});}
 async function saveContent(btn){return busy(btn,"Saving…",async()=>{let x={};Object.keys(defaultSettings).forEach(k=>x[k]=val("s_"+k));let before={...lastSettings};
  {let raw=String(x.deliveryCharge??"").trim(),dc=Number(raw);
   if(raw===""||!isFinite(dc)||dc<0||dc>500){toast("Delivery charge must be a number between 0 and 500","err");document.getElementById("s_deliveryCharge").focus();return}
