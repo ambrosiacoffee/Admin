@@ -204,7 +204,9 @@ button:disabled{opacity:.55;cursor:default}
 <div class="img-upload-row"><label class="upload-btn">Upload Image 2<input type="file" accept="image/*" onchange="handleImageUpload(this,'pimg2')"></label><img id="pimg2_preview" class="img-upload-preview"></div>
 <input id="pimg3" placeholder="Image 3 URL — or upload below">
 <div class="img-upload-row"><label class="upload-btn">Upload Image 3<input type="file" accept="image/*" onchange="handleImageUpload(this,'pimg3')"></label><img id="pimg3_preview" class="img-upload-preview"></div>
-<input id="pbadge" placeholder="Badge e.g. NEW / SALE / BEST SELLER">
+<input id="pbadge" list="badgeList" placeholder="Badge e.g. NEW / SALE / BEST SELLER">
+<datalist id="badgeList"><option value="BEST SELLER"><option value="NEW"><option value="SALE"><option value="LIMITED"></datalist>
+<p style="font-size:12px;color:#76695d;margin:-4px 0 10px">Badge colours on the store: <b style="color:#b9823f">BEST SELLER</b> = gold · <b style="color:#2f6b4f">NEW</b> = green · <b style="color:#b3412c">SALE</b> = red · <b>LIMITED</b> = black.</p>
 <select id="pcat"></select>
 <div style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
 <h3 style="margin-top:0">Pack Sizes & Prices</h3>
@@ -214,6 +216,23 @@ button:disabled{opacity:.55;cursor:default}
 <div><label><input type="checkbox" id="size250_enabled" checked> 250g</label><input id="size250_price" type="number" step=".01" placeholder="Price AED"><input id="size250_old" type="number" step=".01" placeholder="Old Price"><span style="display:block;font-size:11px;color:#76695d;margin-top:4px">Stock (packs)</span><input id="size250_stock" type="number" step="1" min="0" placeholder="Unlimited" style="margin-top:2px"></div>
 <div><label><input type="checkbox" id="size1kg_enabled" checked> 1 Kg</label><input id="size1kg_price" type="number" step=".01" placeholder="Price AED"><input id="size1kg_old" type="number" step=".01" placeholder="Old Price"><span style="display:block;font-size:11px;color:#76695d;margin-top:4px">Stock (packs)</span><input id="size1kg_stock" type="number" step="1" min="0" placeholder="Unlimited" style="margin-top:2px"></div>
 </div></div><div style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
+<h3 style="margin-top:0">✨ Shop Card Extras</h3>
+<p style="font-size:12px;color:#76695d">All optional. Empty = not shown.</p>
+<label style="font-size:13px;font-weight:600">🔥 Roasted on</label>
+<input id="proast" type="date">
+<p style="font-size:12px;color:#76695d;margin:-4px 0 12px">Shows <b>"Roasted 3 days ago"</b> on the card. It hides itself 21 days after this date — update it when you roast a new batch.</p>
+<label style="font-size:13px;font-weight:600">Flavour bars (1 = low · 5 = high)</label>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Sweetness</span><select id="psweet"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Acidity</span><select id="pacid"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+<div><span style="display:block;font-size:12px;color:#76695d;margin-bottom:4px">Body</span><select id="pbody"><option value="">—</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+</div>
+<p style="font-size:12px;color:#76695d;margin:-4px 0 12px">Also used by the <b>Find your coffee</b> quiz to pick the right coffee.</p>
+<label style="font-size:13px;font-weight:600">🏷️ Limited lot — bags roasted</label>
+<input id="plot" type="number" min="0" step="1" inputmode="numeric" placeholder="e.g. 20 (leave empty if not limited)">
+<p style="font-size:12px;color:#76695d;margin:-4px 0 0">Shows <b>"Only 20 bags roasted · 14 left"</b>. "Left" comes from the <b>Stock</b> boxes above, so set stock for each size too.</p>
+</div>
+<div style="margin:14px 0;padding:14px;border:1px solid #eadfce;border-radius:16px;background:#fffaf4">
 <h3 style="margin-top:0">Product Detail Page Content</h3>
 <input id="prating" type="number" step=".1" min="0" max="5" placeholder="Rating e.g. 4.7">
 <input id="previewcount" type="number" min="0" placeholder="Review Count e.g. 154">
@@ -392,6 +411,20 @@ button:disabled{opacity:.55;cursor:default}
   </div>
 
   <div class="panel">
+    <h3>🎁 Free Gift</h3>
+    <p style="font-size:12px;color:#76695d">When the coffee in an order (after any promo discount, before delivery) reaches this amount, the customer picks <b>one free coffee</b> — any coffee, <b>200g or 250g</b>. The cart shows a progress bar. The gift is taken from stock and shows on the order and invoice as <b>FREE</b>. <b>0</b> = switched off.</p>
+    <label>Free gift from (AED)</label>
+    <input id="s_giftMin" type="number" step="1" min="0" max="5000" inputmode="decimal" placeholder="0 = off, e.g. 150">
+  </div>
+
+  <div class="panel">
+    <h3>☕ Find Your Coffee Quiz</h3>
+    <p style="font-size:12px;color:#76695d">3 quick questions on the home page that recommend a coffee. It uses each coffee's <b>flavour bars</b> and flavour line — fill them in for the best matches.</p>
+    <label>Quiz on the home page</label>
+    <select id="s_quiz"><option value="on">On</option><option value="off">Off</option></select>
+  </div>
+
+  <div class="panel">
     <h3>💳 Card Payments (Ziina)</h3>
     <p style="font-size:12px;color:#76695d">Shows <b>"Pay by Card / Apple Pay"</b> at checkout next to Cash on Delivery. Switch on only after the payment functions are deployed and a test payment worked. To try it before customers see it, open <b>ambrosiacoffee.store/?cardtest=1</b> on your phone.</p>
     <label>Card payments at checkout</label>
@@ -531,7 +564,7 @@ collectiontitle:"Our Coffee Collection",collectiondesc:"Choose your favourite st
 abouttitle:"Need help choosing your coffee?",abouttext:"Tell us how you brew your coffee and what flavour you like. We can help you choose the right Ambrosia beans.",helpbutton:"Ask For Help",
 deliverytitle:"Delivery",delivery:"Fast delivery across the UAE. Delivery charges are AED 30.00.",returnstitle:"Returns",returns:"Please contact us if your order arrives damaged or incorrect. We will review the issue and assist you.",
 email:"info@ambrosiacoffee.ae",whatsapp:"+971",uae:"UAE",footerbrand:"AMBROSIA SPECIALITY",footerdesc:"Freshly roasted coffee beans for homes, cafés and coffee lovers across the UAE.",copyright:"© 2026 Ambrosia Coffee Beans. All Rights Reserved.",
-facebook:"",instagram:"",tiktok:"",twitter:"",cardpay:"off",deliveryCharge:30,
+facebook:"",instagram:"",tiktok:"",twitter:"",cardpay:"off",deliveryCharge:30,giftMin:0,quiz:"on",
 topbar_ar:"",home_ar:"",shop_ar:"",collections_ar:"",coffee_ar:"",best_ar:"",aboutnav_ar:"",contactnav_ar:"",eyebrow_ar:"",herotitle_ar:"",herodesc_ar:"",herobutton_ar:"",storetitle_ar:"",storedesc_ar:"",collectiontitle_ar:"",collectiondesc_ar:"",abouttitle_ar:"",abouttext_ar:"",helpbutton_ar:"",uae_ar:"",footerdesc_ar:"",copyright_ar:""
 };
 
@@ -559,7 +592,7 @@ function describeProductChanges(a,b){
   if(Number(x.old||0)!==Number(y.old||0))out.push(`${label} old price ${money2(x.old)} → ${money2(y.old)}`);
  });
  if([a.img,...(a.gallery||[])].join("|")!==[b.img,...(b.gallery||[])].join("|"))out.push("images changed");
- ["description","tastingNotes","brewingGuide","tastingShort","origin"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push(f+" changed")});
+ ["description","tastingNotes","brewingGuide","tastingShort","origin","roastDate","sweet","acid","body","lotSize"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push(f+" changed")});
  if((a.name_ar||"")!==(b.name_ar||""))out.push(`Arabic name "${a.name_ar||"-"}" → "${b.name_ar||"-"}"`);
  ["tastingShort_ar","description_ar","tastingNotes_ar","brewingGuide_ar"].forEach(f=>{if(String(a[f]??"")!==String(b[f]??""))out.push("Arabic "+f.replace("_ar","")+" changed")});
  if(Number(a.rating||5)!==Number(b.rating||5))out.push(`rating ${a.rating||5} → ${b.rating||5}`);
@@ -734,6 +767,9 @@ async function saveProductInner(){
  let p={id:String(id),name:document.getElementById("pname").value.trim(),price:basePrice,old:baseOld,img:imgs[0]||"",gallery:imgs.slice(1),badge:document.getElementById("pbadge").value.trim(),cat:document.getElementById("pcat").value,sizes,
 rating:+document.getElementById("prating").value||5,reviewCount:+document.getElementById("previewcount").value||0,tastingShort:document.getElementById("ptasting").value.trim(),description:document.getElementById("pdescription").value.trim(),tastingNotes:document.getElementById("ptastingnotes").value.trim(),brewingGuide:document.getElementById("pbrewing").value.trim(),origin:document.getElementById("porigin").value.trim(),
 name_ar:document.getElementById("pname_ar").value.trim(),tastingShort_ar:document.getElementById("ptasting_ar").value.trim(),description_ar:document.getElementById("pdescription_ar").value.trim(),tastingNotes_ar:document.getElementById("ptastingnotes_ar").value.trim(),brewingGuide_ar:document.getElementById("pbrewing_ar").value.trim()};
+ {let rd=document.getElementById("proast").value;if(/^\d{4}-\d{2}-\d{2}$/.test(rd))p.roastDate=rd;
+  [["psweet","sweet"],["pacid","acid"],["pbody","body"]].forEach(([el,f])=>{let v=Math.round(Number(document.getElementById(el).value)||0);if(v>=1&&v<=5)p[f]=v});
+  let lot=Math.floor(Number(document.getElementById("plot").value)||0);if(lot>0)p.lotSize=lot;}
  if(!p.name||!basePrice)return alert("Product name and at least one enabled pack size price are required.");
  let i=products.findIndex(x=>String(x.id)===String(id));let before=i>=0?JSON.parse(JSON.stringify(products[i])):null;if(i>=0)products[i]=p;else products.push(p);
  try{
@@ -774,6 +810,7 @@ function edit(id){
  SIZE_KEYS.forEach(([k,,pre])=>{let v=stockOf(p.id,k),el=document.getElementById(pre+"_stock");el.value=v===null?"":v;el.dataset.loaded=el.value;});
 document.getElementById("prating").value=p.rating??5;document.getElementById("previewcount").value=p.reviewCount??p.reviews??0;document.getElementById("ptasting").value=p.tastingShort||p.shortDescription||"";document.getElementById("pdescription").value=p.description||"";document.getElementById("ptastingnotes").value=p.tastingNotes||"";document.getElementById("pbrewing").value=p.brewingGuide||"";document.getElementById("porigin").value=p.origin||"";
  [["pname_ar","name_ar"],["ptasting_ar","tastingShort_ar"],["pdescription_ar","description_ar"],["ptastingnotes_ar","tastingNotes_ar"],["pbrewing_ar","brewingGuide_ar"]].forEach(([el,f])=>document.getElementById(el).value=p[f]||"");
+ [["proast","roastDate"],["psweet","sweet"],["pacid","acid"],["pbody","body"],["plot","lotSize"]].forEach(([el,f])=>document.getElementById(el).value=p[f]??"");
  document.getElementById("parBox").open=!!(p.name_ar||p.tastingShort_ar||p.description_ar||p.tastingNotes_ar||p.brewingGuide_ar);
  let s=p.sizes||{};
  [["g200","size200"],["g250","size250"],["kg1","size1kg"]].forEach(([k,pre])=>{let x=s[k]||{};document.getElementById(pre+"_enabled").checked=x.enabled!==false;document.getElementById(pre+"_price").value=x.price||"";document.getElementById(pre+"_old").value=x.old||""});
@@ -796,7 +833,7 @@ async function moveProduct(id,dir){
  renderProducts();
  try{await saveProducts();logAction("Products reordered",`${products[j].name} moved ${dir<0?"up":"down"}`);toast("✓ Product order saved");}catch(e){toast("Save failed: "+e.message,"err");}
 }
-function clearForm(){["pid","pname","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin","pname_ar","ptasting_ar","pdescription_ar","ptastingnotes_ar","pbrewing_ar"].forEach(x=>document.getElementById(x).value="");document.getElementById("parBox").open=false;["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);["pimg1","pimg2","pimg3"].forEach(x=>setImgPreview(x,""));SIZE_KEYS.forEach(([,,pre])=>{let el=document.getElementById(pre+"_stock");el.value="";el.dataset.loaded="";});document.getElementById("editingNote").classList.remove("show");document.getElementById("saveProductBtn").textContent="Save Product";}
+function clearForm(){["pid","pname","pimg1","pimg2","pimg3","pbadge","size200_price","size200_old","size250_price","size250_old","size1kg_price","size1kg_old","prating","previewcount","ptasting","pdescription","ptastingnotes","pbrewing","porigin","pname_ar","ptasting_ar","pdescription_ar","ptastingnotes_ar","pbrewing_ar","proast","psweet","pacid","pbody","plot"].forEach(x=>document.getElementById(x).value="");document.getElementById("parBox").open=false;["size200_enabled","size250_enabled","size1kg_enabled"].forEach(x=>document.getElementById(x).checked=true);["pimg1","pimg2","pimg3"].forEach(x=>setImgPreview(x,""));SIZE_KEYS.forEach(([,,pre])=>{let el=document.getElementById(pre+"_stock");el.value="";el.dataset.loaded="";});document.getElementById("editingNote").classList.remove("show");document.getElementById("saveProductBtn").textContent="Save Product";}
 
 async function saveCollections(){if(!collectionsLoaded)throw new Error("collections are still loading — wait a moment and try again");await db.ref("collections").set(collections);}
 async function saveCollection(btn){return busy(btn,"Saving…",async()=>{
@@ -913,7 +950,7 @@ async function setOrderStatus(key,status){
  }catch(e){toast("Status update failed: "+e.message,"err");renderOrders();}
 }
 window.setOrderStatus=setOrderStatus;
-function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));ordersData=ordersData.filter(x=>!cardWaiting(x)).concat(ordersData.filter(cardWaiting));let waitHead=false;document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x),w=cardWaiting(x),head="";if(w&&!waitHead){waitHead=true;head=`<tr><td colspan="6" style="background:#f6efe3;color:#7a4a12;font-size:13px;padding:10px 12px"><b>⏳ Card orders waiting for payment</b> — don't send these yet. They move up automatically when the customer pays.</td></tr>`}return head+`<tr${w?` style="opacity:.55"`:""}><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}${x.lang==="ar"?` <span class="badge" title="Ordered using the Arabic store" style="padding:2px 7px;background:#dfe9e6;color:#23514b">AR</span>`:""}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}<br>${payBadge(x)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
+function renderOrders(){let box=document.getElementById("ordersList");if(ordersRaw===null){box.innerHTML="<p>Loading orders…</p>";return}{let raw=ordersRaw,entries=Object.entries(raw);entries.reverse();ordersData=entries.map(([key,x])=>({key,...x}));ordersData=ordersData.filter(x=>!cardWaiting(x)).concat(ordersData.filter(cardWaiting));let waitHead=false;document.getElementById("ordersList").innerHTML=ordersData.length?`<div style="overflow-x:auto"><table><tr><th>Order</th><th>Date</th><th>Customer</th><th>Total</th><th>Status</th><th></th></tr>${ordersData.map((x,i)=>{let iss=orderPriceIssues(x),w=cardWaiting(x),head="";if(w&&!waitHead){waitHead=true;head=`<tr><td colspan="6" style="background:#f6efe3;color:#7a4a12;font-size:13px;padding:10px 12px"><b>⏳ Card orders waiting for payment</b> — don't send these yet. They move up automatically when the customer pays.</td></tr>`}return head+`<tr${w?` style="opacity:.55"`:""}><td>${esc(x.orderNo||x.key)}${iss.length?`<br><span class="badge" style="background:#f3d9a4;color:#7a4a12" title="${esc(iss.join(" · "))}">⚠ check prices</span>`:""}</td><td style="white-space:nowrap">${x.created?esc(new Date(x.created).toLocaleString(undefined,{day:"numeric",month:"short",hour:"numeric",minute:"2-digit"})):"-"}</td><td>${esc(x.customer?.fullname||x.customer?.name||"-")}${x.lang==="ar"?` <span class="badge" title="Ordered using the Arabic store" style="padding:2px 7px;background:#dfe9e6;color:#23514b">AR</span>`:""}${x.gift?` <span class="badge" title="Free gift: ${esc((x.gift.name||"")+" "+(x.gift.size||""))}" style="padding:2px 7px;background:#e3f1e7;color:#24543b">🎁 +free ${esc(x.gift.size||"")}</span>`:""}${x.giftOrder?` <span class="badge" title="${esc(x.giftMessage?"Gift message: "+x.giftMessage:"Gift order — no prices in the box")}" style="padding:2px 7px;background:#f6e6ee;color:#7a2f55">🎁 Gift</span>`:""}<br><span style="font-size:12px;color:#76695d">${esc(x.customer?.phone||"")}</span></td><td>AED ${Number(x.total||0).toFixed(2)}<br>${payBadge(x)}</td><td><select style="margin:0;padding:7px 9px;width:auto" onchange="setOrderStatus('${esc(x.key)}',this.value)">${ORDER_STATUSES.concat(ORDER_STATUSES.includes(x.status||"New")?[]:[x.status]).map(st=>`<option ${st===(x.status||"New")?"selected":""}>${esc(st)}</option>`).join("")}</select></td><td class="actions"><button class="secondary" onclick="viewInvoice(${i})">Invoice</button><button class="danger" onclick="delOrder('${String(x.key).replace(/'/g,"\\'")}')">Delete</button></td></tr>`}).join("")}</table></div>`:"<p>No orders saved yet.</p>";}}
 function orderStockBack(o){
  let back=[];
  if(o&&o.stockDeducted&&o.stockTaken&&typeof o.stockTaken==="object"){
@@ -1067,6 +1104,14 @@ function viewInvoice(i){
    <td style="padding:14px 8px;border-bottom:1px solid ${line};text-align:right;vertical-align:top;font-size:13px;color:#5b4b3e;white-space:nowrap">${money2(it.price)}</td>
    <td style="padding:14px 0 14px 8px;border-bottom:1px solid ${line};text-align:right;vertical-align:top;font-size:13px;font-weight:600;white-space:nowrap">${money2(Number(it.price||0)*Number(it.qty||0))}</td>
   </tr>`).join("");
+ if(o.gift&&o.gift.name)rows+=`<tr>
+   <td style="padding:14px 0;border-bottom:1px solid ${line};vertical-align:top;width:28px;color:${muted};font-size:12px">🎁</td>
+   <td style="padding:14px 8px 14px 0;border-bottom:1px solid ${line};vertical-align:top"><div style="font-size:14px;color:${ink};font-weight:600">${esc(o.gift.name)}</div><div style="font-size:11.5px;color:#2c7a3c;margin-top:3px">${esc(o.gift.size||"")} · Free gift</div></td>
+   <td style="padding:14px 8px;border-bottom:1px solid ${line};text-align:center;vertical-align:top;font-size:13px">1</td>
+   <td style="padding:14px 8px;border-bottom:1px solid ${line};text-align:right;vertical-align:top;font-size:13px;color:#2c7a3c">FREE</td>
+   <td style="padding:14px 0 14px 8px;border-bottom:1px solid ${line};text-align:right;vertical-align:top;font-size:13px;font-weight:600;color:#2c7a3c">0.00</td>
+  </tr>`;
+ let giftBox=o.giftOrder?`<div style="margin:0 0 20px;border:1.5px dashed #9cbab4;background:#f3faf8;border-radius:12px;padding:12px 16px"><div style="${cap};color:#2f5d57">🎁 Gift order — don't put prices in the box</div>${o.giftMessage?`<div style="font-family:Georgia,serif;font-style:italic;font-size:15px;margin-top:8px;color:#2f4744">"${esc(o.giftMessage)}"</div>`:""}</div>`:"";
  let tl=(label,val,extra="")=>`<tr><td style="padding:6px 0;color:${muted};font-size:12.5px">${label}</td><td style="padding:6px 0;text-align:right;font-size:13px;white-space:nowrap;${extra}">${val}</td></tr>`;
  let iss=orderPriceIssues(o);
  document.getElementById("invoiceBody").innerHTML=(iss.length?`<div class="no-print" style="background:#f3d9a4;color:#7a4a12;border-radius:12px;padding:10px 14px;margin:0 40px 14px 0;font-size:13px"><b>⚠ Please check this order's prices:</b><br>${iss.map(esc).join("<br>")}</div>`:"")+`
@@ -1105,6 +1150,7 @@ function viewInvoice(i){
     </div>
    </div>
 
+   ${giftBox}
    <table style="width:100%;border-collapse:collapse">
     <tr>
      <th style="${cap};text-align:left;padding:0 0 10px;border-bottom:1.5px solid ${ink}">#</th>
@@ -1365,7 +1411,10 @@ async function saveContent(btn){return busy(btn,"Saving…",async()=>{let x={};O
   x.deliveryCharge=Math.round(dc*100)/100;
   x.deliveryChargeSince=Number(before.deliveryCharge)===x.deliveryCharge&&before.deliveryChargeSince?before.deliveryChargeSince:(Number(before.deliveryCharge)===x.deliveryCharge?"":new Date().toISOString());
   if(!x.deliveryChargeSince)delete x.deliveryChargeSince;
-  if(Number(before.deliveryCharge)!==x.deliveryCharge&&!confirm(`Change the delivery charge from AED ${money2(before.deliveryCharge)} to AED ${money2(x.deliveryCharge)}?\n\nNew orders will use the new charge straight away.`))return;}let changed=Object.keys(x).filter(k=>String(x[k]??"")!==String(before[k]??""));try{await db.ref("settings").set(x);logAction("Store content saved",changed.length?changed.map(k=>`${k}: "${String(before[k]??"").slice(0,80)}" → "${String(x[k]).slice(0,80)}"`).join("; "):"no changes");toast("✓ Store content saved");}catch(e){toast("Save failed: "+e.message,"err");}});}
+  if(Number(before.deliveryCharge)!==x.deliveryCharge&&!confirm(`Change the delivery charge from AED ${money2(before.deliveryCharge)} to AED ${money2(x.deliveryCharge)}?\n\nNew orders will use the new charge straight away.`))return;}
+ {let raw=String(x.giftMin??"").trim(),g=raw===""?0:Number(raw);
+  if(!isFinite(g)||g<0||g>5000){toast("Free gift amount must be between 0 and 5000","err");document.getElementById("s_giftMin").focus();return}
+  x.giftMin=Math.round(g*100)/100;}let changed=Object.keys(x).filter(k=>String(x[k]??"")!==String(before[k]??""));try{await db.ref("settings").set(x);logAction("Store content saved",changed.length?changed.map(k=>`${k}: "${String(before[k]??"").slice(0,80)}" → "${String(x[k]).slice(0,80)}"`).join("; "):"no changes");toast("✓ Store content saved");}catch(e){toast("Save failed: "+e.message,"err");}});}
 async function resetContent(){if(confirm("Reset all store content back to the defaults? This replaces what's live on the store.")){try{await db.ref("settings").set(defaultSettings);loadContent();logAction("Store content reset","All store text reset to defaults");toast("✓ Store content reset to defaults");}catch(e){toast("Reset failed: "+e.message,"err");}}}
 
 // Sign-in check runs last, after every variable above has been created.
